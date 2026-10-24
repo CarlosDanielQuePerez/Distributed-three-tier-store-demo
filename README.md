@@ -30,4 +30,4 @@ La VIP de presentación es `172.30.0.250` y la VIP de aplicación es `172.31.0.2
 Compose publica el puerto 80 del host en el contenedor maestro de presentación. El mapeo de puertos publicados de Docker apunta a ese contenedor específico, por lo que en un despliegue de Compose en un solo host, la conmutación por error de la VIP no traslada el mapeo del puerto del host. La VIP de presentación está disponible para otros contenedores en la red perimetral (*edge network*); exponla a través de una configuración de red/host que admita VIPs flotantes si requieres conmutación por error a nivel de host.
 
 ## Documentación del Proyecto
-La documentación detallada de la arquitectura, instalación, API y failover se encuentra disponible en la [Wiki del proyecto](https://github.com/CarlosDanielQuePerez/Distributed-three-tier-store-demo.wiki.git).
+La documentación detallada de la arquitectura, instalación, API y failover se encuentra disponible en la [Wiki del proyecto](https://github.com/CarlosDanielQuePerez/Distributed-three-tier-store-demo/wiki/Tarea-%23995:-Sistema-distribuido-de-tres-capas:-alta-disponibilidad-y-resiliencia).
