@@ -1,126 +1,30 @@
-# Distributed three-tier store demo
+# Demostración de tienda distribuida de tres capas
 
-The stack serves a static storefront through three Nginx presentation nodes. Its
-Node.js application tier queries a MariaDB Galera cluster for the ten cheapest
-products, caches that list in Redis, and stores product reviews in MongoDB.
-HAProxy instances distribute requests within each tier, and Keepalived provides
-a master/backup virtual IP for each HAProxy pair.
+La pila (*stack*) sirve una tienda estática a través de tres nodos de presentación Nginx. Su capa de aplicación en Node.js consulta un clúster de MariaDB Galera para obtener los diez productos más baratos, almacena en caché esa lista en Redis y guarda las reseñas de productos en MongoDB. Instancias de HAProxy distribuyen las solicitudes dentro de cada capa, y Keepalived proporciona una IP virtual (VIP) maestro/respaldo (*master/backup*) para cada par de HAProxy.
 
-## Architecture
+## Arquitectura
 
-```mermaid
-flowchart LR
-    browser[Browser]
+<img width="3280" height="900" alt="Distribución de tres niveles" src="https://github.com/user-attachments/assets/edce06a5-2015-4d82-b4c6-2c92b890f31a" />
 
-    subgraph edge["Presentation tier · edge network"]
-        plbM["HAProxy presentation master<br/>host port 80"]
-        plbB["HAProxy presentation backup"]
-        pka["Keepalived VRRP pair<br/>presentation VIP 172.30.0.250"]
-        web1["Nginx webnode1"]
-        web2["Nginx webnode2"]
-        web3["Nginx webnode3"]
-        plbM --- pka
-        plbB --- pka
-        plbM --> web1
-        plbM --> web2
-        plbM --> web3
-        plbB -. failover .-> web1
-        plbB -. failover .-> web2
-        plbB -. failover .-> web3
-    end
+Las solicitudes de listas de productos consultan Redis en primer lugar; si ocurre un fallo de caché (*cache miss*), se consulta a MariaDB y luego se pobla Redis. Las solicitudes de reseñas utilizan MongoDB, usando MariaDB para verificar el producto antes de insertar la reseña. En esta configuración de Compose en un solo host, el puerto 80 del host es publicado por el contenedor maestro de presentación; la VIP de presentación no traslada el mapeo de puertos del host de Docker durante una conmutación por error (*failover*).
 
-    subgraph appnet["Application tier · internal application network"]
-        albM["HAProxy application master"]
-        albB["HAProxy application backup"]
-        aka["Keepalived VRRP pair<br/>application VIP 172.31.0.250"]
-        app1["API app1"]
-        app2["API app2"]
-        app3["API app3"]
-        albM --- aka
-        albB --- aka
-        albM --> app1
-        albM --> app2
-        albM --> app3
-        albB -. failover .-> app1
-        albB -. failover .-> app2
-        albB -. failover .-> app3
-    end
+## Ejecución local
 
-    subgraph data["Data tier · internal database network"]
-        redis[("Redis<br/>catalog cache")]
-        galera1[("MariaDB Galera node 1<br/>catalog queries")]
-        galera2[("MariaDB Galera node 2")]
-        galera3[("MariaDB Galera node 3")]
-        mongo[("MongoDB<br/>product reviews")]
-        galera1 <--> galera2
-        galera2 <--> galera3
-        galera3 <--> galera1
-    end
+1. Copia `.env.example` a `.env` y reemplaza las contraseñas de ejemplo.
+2. Inicia la pila con `docker compose up --build`.
+3. Abre `http://localhost/` para la tienda y `http://localhost:8088/` para Nagios.
 
-    browser -->|"HTTP :80"| plbM
-    web1 -->|"API via VIP"| aka
-    web2 -->|"API via VIP"| aka
-    web3 -->|"API via VIP"| aka
-    app1 -->|"cache lookup / invalidate"| redis
-    app2 -->|"cache lookup / invalidate"| redis
-    app3 -->|"cache lookup / invalidate"| redis
-    app1 -->|"cache miss: query catalog"| galera1
-    app2 -->|"cache miss: query catalog"| galera1
-    app3 -->|"cache miss: query catalog"| galera1
-    app1 -->|"read/write reviews"| mongo
-    app2 -->|"read/write reviews"| mongo
-    app3 -->|"read/write reviews"| mongo
-```
+El endpoint de productos es `http://localhost/api/products/cheapest`; devuelve un JSON ordenado por precio ascendente. La tienda llama a este endpoint y renderiza los productos devueltos. La creación del esquema y la inserción de datos de prueba las realiza de forma idempotente el servicio `catalog-init` una vez que el primer nodo de Galera está saludable.
 
-Product-list requests check Redis first; a cache miss queries MariaDB and then
-populates Redis. Review requests use MongoDB, with MariaDB used to verify the
-product before a review is inserted. In this single-host Compose setup, host
-port 80 is published by the presentation master container; the presentation
-VIP does not move Docker's host-port mapping during failover.
+La tienda también muestra el rastreo en vivo de la solicitud para sus peticiones de API de productos y reseñas. Encabezados como `X-Request-Trace` en la respuesta de la API registran el balanceador de carga de presentación, el nodo web seleccionado, el balanceador de carga de aplicación, el nodo de aplicación y los almacenes de datos reales consultados por esa solicitud.
+El menú del explorador de API de la tienda puede consultar `/`, `/health`, `/products/cheapest` y `/products/ST-001/reviews`.
 
-## Run locally
+Usa el menú del explorador de API de la tienda para consultar los endpoints de productos, reseñas, información del servicio y estado de salud (*health*). Su botón **Clear Redis catalog cache** llama a `POST /api/cache/clear`, el cual elimina únicamente la entrada en caché de los productos más baratos; la siguiente solicitud del catálogo volverá a llenarla desde MariaDB.
 
-1. Copy `.env.example` to `.env` and replace the example passwords.
-2. Start the stack with `docker compose up --build`.
-3. Open `http://localhost/` for the storefront and
-   `http://localhost:8088/` for Nagios.
+La aplicación utiliza Redis para almacenar en caché la respuesta de los productos más baratos durante 60 segundos. MongoDB almacena las reseñas de productos: usa `GET /api/products/ST-001/reviews` para leer las reseñas o envía un JSON como `{"reviewer":"Taylor","rating":5,"comment":"Great bag."}` a `POST /api/products/ST-001/reviews` para agregar una. El servicio de inicialización crea el índice de reseñas e inserta las reseñas de prueba de forma idempotente. MongoDB y Redis son privados dentro de la red de base de datos y no están expuestos en los puertos del host.
 
-The product endpoint is `http://localhost/api/products/cheapest`; it returns
-JSON sorted by ascending price. The storefront calls this endpoint and renders
-the returned products. Schema creation and sample data insertion are
-idempotently performed by the `catalog-init` service after the first Galera
-node is healthy.
+## Conmutación por error del balanceador de carga (*Load-balancer failover*)
 
-The storefront also displays a live request pipeline for its product and
-review API requests. The API's `X-Request-Trace` response header records the
-presentation load balancer, selected web node, application load balancer,
-application node, and the actual data stores touched by that request.
-The storefront API explorer menu can query `/`, `/health`,
-`/products/cheapest`, and `/products/ST-001/reviews`.
+La VIP de presentación es `172.30.0.250` y la VIP de aplicación es `172.31.0.250`. Cada par de Keepalived comparte el espacio de nombres de red (*network namespace*) de su contenedor HAProxy, utiliza VRRP unicast y monitorea el puerto de escucha local de HAProxy. Las solicitudes de aplicación desde Nginx utilizan la VIP flotante de aplicación.
 
-Use the storefront's API explorer menu to query the product, review, service
-information, and health endpoints. Its **Clear Redis catalog cache** button
-calls `POST /api/cache/clear`, which deletes only the cheapest-products cache
-entry; the next catalog request refills it from MariaDB.
-
-The application uses Redis to cache the cheapest-products response for 60
-seconds. MongoDB stores product reviews: use
-`GET /api/products/ST-001/reviews` to read reviews or send JSON such as
-`{"reviewer":"Taylor","rating":5,"comment":"Great bag."}` to
-`POST /api/products/ST-001/reviews` to add one. The initialization service
-creates the review index and inserts sample reviews idempotently. MongoDB and
-Redis are private to the database network and are not published on host ports.
-
-## Load-balancer failover
-
-The presentation VIP is `172.30.0.250` and the application VIP is
-`172.31.0.250`. Each Keepalived pair shares its HAProxy container's network
-namespace, uses unicast VRRP, and tracks the local HAProxy listener. Application
-requests from Nginx use the floating application VIP.
-
-Compose publishes host port 80 on the presentation master container. Docker's
-published-port mapping targets that specific container, so on a single-host
-Compose deployment the VIP failover does not move the host port mapping. The
-presentation VIP is available to other containers on the edge network; expose
-it through a host/network setup that supports floating VIPs if host-level
-failover is required.
+Compose publica el puerto 80 del host en el contenedor maestro de presentación. El mapeo de puertos publicados de Docker apunta a ese contenedor específico, por lo que en un despliegue de Compose en un solo host, la conmutación por error de la VIP no traslada el mapeo del puerto del host. La VIP de presentación está disponible para otros contenedores en la red perimetral (*edge network*); exponla a través de una configuración de red/host que admita VIPs flotantes si requieres conmutación por error a nivel de host.
