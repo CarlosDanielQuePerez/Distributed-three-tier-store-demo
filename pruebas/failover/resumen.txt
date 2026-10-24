@@ -1,0 +1,12 @@
+presentation-lb-master | apagado a las 15:46:53 | completadas: 18570 | Non-2xx: 0 | Failed: 3 | req/s: 618.98 | p99: 81 ms | máx: 5037 ms
+  IP 172.30.0.250 (presentation) -> presentation-keepalived-master
+  IP 172.31.0.250 (application) -> application-keepalived-master
+application-lb-master | apagado a las 15:48:01 | completadas: 5098 | Non-2xx: 0 | Failed: 0 | req/s: 148.63 | p99: 1036 ms | máx: 12171 ms
+  IP 172.30.0.250 (presentation) -> presentation-keepalived-master
+  IP 172.31.0.250 (application) -> application-keepalived-master
+web1 | apagado a las 15:49:13 | completadas: 6518 | Non-2xx: 12 | Failed: 12 | req/s: 217.25 | p99: 51 ms | máx: 24423 ms
+  IP 172.30.0.250 (presentation) -> presentation-keepalived-master
+  IP 172.31.0.250 (application) -> application-keepalived-master
+app1 | apagado a las 15:50:20 | completadas: 14297 | Non-2xx: 22 | Failed: 22 | req/s: 476.52 | p99: 58 ms | máx: 19349 ms
+  IP 172.30.0.250 (presentation) -> presentation-keepalived-master
+  IP 172.31.0.250 (application) -> application-keepalived-master

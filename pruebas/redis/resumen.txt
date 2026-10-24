@@ -1,0 +1,7 @@
+Complete requests:      9085
+Failed requests:        1
+Non-2xx responses:      1
+Requests per second:    188.71 [#/sec] (mean)
+redis
+6379
+role:master

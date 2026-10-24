@@ -33,14 +33,20 @@ const connectToMariaDb = async () => {
 };
 
 const connection = await connectToMariaDb();
+const mongoHosts =
+  process.env.MONGO_HOSTS ||
+  `${required("MONGO_HOST")}:${Number(process.env.MONGO_PORT || 27017)}`;
+const mongoReplicaSet = process.env.MONGO_REPLICA_SET;
 const mongo = new MongoClient(
-  `mongodb://${required("MONGO_HOST")}:${Number(process.env.MONGO_PORT || 27017)}/${encodeURIComponent(required("MONGO_DB"))}`,
+  `mongodb://${mongoHosts}/${encodeURIComponent(required("MONGO_DB"))}` +
+    (mongoReplicaSet ? `?replicaSet=${encodeURIComponent(mongoReplicaSet)}&w=majority` : ""),
   {
     auth: {
       username: required("MONGO_USER"),
       password: required("MONGO_PASSWORD"),
     },
     authSource: "admin",
+    serverSelectionTimeoutMS: 5000,
   },
 );
 

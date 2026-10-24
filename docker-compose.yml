@@ -183,18 +183,22 @@ services:
   app1:
     build: ./application
     environment: &application-environment
-      DB_HOST: galera1
+      DB_HOST: db-lb
       DB_PORT: 3306
       DB_NAME: ${CATALOG_DB_NAME:?Set CATALOG_DB_NAME in .env}
       DB_USER: ${CATALOG_DB_USER:?Set CATALOG_DB_USER in .env}
       DB_PASSWORD: ${CATALOG_DB_PASSWORD:?Set CATALOG_DB_PASSWORD in .env}
       MONGO_HOST: mongodb
       MONGO_PORT: 27017
+      MONGO_HOSTS: mongodb:27017,mongodb2:27017,mongodb3:27017
+      MONGO_REPLICA_SET: rs0
       MONGO_DB: ${MONGO_DB_NAME:?Set MONGO_DB_NAME in .env}
       MONGO_USER: ${MONGO_ROOT_USERNAME:?Set MONGO_ROOT_USERNAME in .env}
       MONGO_PASSWORD: ${MONGO_ROOT_PASSWORD:?Set MONGO_ROOT_PASSWORD in .env}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_SENTINELS: sentinel1:26379,sentinel2:26379,sentinel3:26379
+      REDIS_MASTER_NAME: mymaster
       APPLICATION_NODE: app1
     restart: unless-stopped
     depends_on:
@@ -238,23 +242,36 @@ services:
       - ./database/catalog.sql:/app/database/catalog.sql:ro
     restart: "no"
     depends_on:
+      db-lb:
+        condition: service_started
       galera1:
         condition: service_healthy
-      mongodb:
-        condition: service_healthy
+      mongo-init:
+        condition: service_completed_successfully
       redis:
+        condition: service_healthy
+      redis2:
+        condition: service_healthy
+      sentinel1:
+        condition: service_healthy
+      sentinel2:
+        condition: service_healthy
+      sentinel3:
         condition: service_healthy
     networks:
       - database
 
   mongodb:
-    image: mongo:8
-    environment:
+    build: ./mongo
+    image: distributed-three-tier-mongo
+    command: ["mongod", "--replSet", "rs0", "--keyFile", "/etc/mongo-keyfile", "--bind_ip_all"]
+    environment: &mongo-environment
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:?Set MONGO_ROOT_USERNAME in .env}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?Set MONGO_ROOT_PASSWORD in .env}
     volumes:
       - mongodb-data:/data/db
-    healthcheck:
+    restart: unless-stopped
+    healthcheck: &mongo-healthcheck
       test:
         [
           "CMD-SHELL",
@@ -267,13 +284,121 @@ services:
     networks:
       - database
 
+  mongodb2:
+    build: ./mongo
+    image: distributed-three-tier-mongo
+    command: ["mongod", "--replSet", "rs0", "--keyFile", "/etc/mongo-keyfile", "--bind_ip_all"]
+    environment: *mongo-environment
+    volumes:
+      - mongodb2-data:/data/db
+    restart: unless-stopped
+    healthcheck: *mongo-healthcheck
+    networks:
+      - database
+
+  mongodb3:
+    build: ./mongo
+    image: distributed-three-tier-mongo
+    command: ["mongod", "--replSet", "rs0", "--keyFile", "/etc/mongo-keyfile", "--bind_ip_all"]
+    environment: *mongo-environment
+    volumes:
+      - mongodb3-data:/data/db
+    restart: unless-stopped
+    healthcheck: *mongo-healthcheck
+    networks:
+      - database
+
+  mongo-init:
+    build: ./mongo
+    image: distributed-three-tier-mongo
+    entrypoint: ["bash", "/init-replica.sh"]
+    environment: *mongo-environment
+    volumes:
+      - ./mongo/init-replica.sh:/init-replica.sh:ro
+    restart: "no"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      mongodb2:
+        condition: service_healthy
+      mongodb3:
+        condition: service_healthy
+    networks:
+      - database
+
   redis:
     image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--protected-mode", "no", "--replica-announce-ip", "redis"]
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
+    networks:
+      - database
+
+  redis2:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--protected-mode", "no", "--replicaof", "redis", "6379", "--replica-announce-ip", "redis2"]
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - database
+
+  sentinel1:
+    image: redis:7-alpine
+    command: ["sh", "-c", "cp /etc/redis-conf/sentinel.conf /tmp/sentinel.conf && exec redis-sentinel /tmp/sentinel.conf"]
+    volumes:
+      - ./redis:/etc/redis-conf:ro
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      redis2:
+        condition: service_healthy
+    healthcheck: &sentinel-healthcheck
+      test: ["CMD", "redis-cli", "-p", "26379", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - database
+
+  sentinel2:
+    image: redis:7-alpine
+    command: ["sh", "-c", "cp /etc/redis-conf/sentinel.conf /tmp/sentinel.conf && exec redis-sentinel /tmp/sentinel.conf"]
+    volumes:
+      - ./redis:/etc/redis-conf:ro
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      redis2:
+        condition: service_healthy
+    healthcheck: *sentinel-healthcheck
+    networks:
+      - database
+
+  sentinel3:
+    image: redis:7-alpine
+    command: ["sh", "-c", "cp /etc/redis-conf/sentinel.conf /tmp/sentinel.conf && exec redis-sentinel /tmp/sentinel.conf"]
+    volumes:
+      - ./redis:/etc/redis-conf:ro
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      redis2:
+        condition: service_healthy
+    healthcheck: *sentinel-healthcheck
     networks:
       - database
 
@@ -286,7 +411,8 @@ services:
       MARIADB_PASSWORD: ${CATALOG_DB_PASSWORD:?Set CATALOG_DB_PASSWORD in .env}
       MARIADB_GALERA_CLUSTER_NAME: distributed-cluster
       MARIADB_GALERA_CLUSTER_ADDRESS: gcomm://galera1,galera2,galera3
-      MARIADB_GALERA_CLUSTER_BOOTSTRAP: "yes"
+      MARIADB_GALERA_CLUSTER_BOOTSTRAP: "${GALERA1_BOOTSTRAP:-yes}"
+      MARIADB_GALERA_FORCE_SAFETOBOOTSTRAP: "${GALERA1_FORCE_BOOTSTRAP:-no}"
       MARIADB_GALERA_MARIABACKUP_USER: mariabackup
       MARIADB_GALERA_MARIABACKUP_PASSWORD: ${MARIADB_BACKUP_PASSWORD:?Set MARIADB_BACKUP_PASSWORD in .env}
     volumes:
@@ -346,6 +472,21 @@ services:
     networks:
       - database
 
+  db-lb:
+    image: haproxy:3.2-alpine
+    volumes:
+      - ./haproxy/db.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    restart: unless-stopped
+    depends_on:
+      galera1:
+        condition: service_started
+      galera2:
+        condition: service_started
+      galera3:
+        condition: service_started
+    networks:
+      - database
+
   nagios:
     image: jasonrivers/nagios:latest
     ports:
@@ -386,6 +527,8 @@ volumes:
   galera2-data:
   galera3-data:
   mongodb-data:
+  mongodb2-data:
+  mongodb3-data:
 
 networks:
   edge:

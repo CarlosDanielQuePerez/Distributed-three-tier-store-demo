@@ -1,0 +1,10 @@
+=== kill web1 a las 19:32:33 ===
+  t=+0.4s  código=200  tardó=1.01s
+  t=+1.7s  código=200  tardó=1.00s
+  t=+2.9s  código=000  tardó=0.61s
+  Tiempo total de espera anormal: 2.6 s
+=== kill app1 a las 19:33:50 ===
+  t=+0.4s  código=200  tardó=1.01s
+  t=+1.6s  código=200  tardó=1.01s
+  t=+2.9s  código=502  tardó=0.85s
+  Tiempo total de espera anormal: 2.9 s

@@ -1,0 +1,8 @@
+=== presentation: apagado de presentation-lb-master ===
+Duración del 'docker compose stop': 1.7 s
+La IP 172.30.0.250 apareció en el backup 5.1 s después de ordenar el apagado
+Peticiones: 524 | no-200: 0 | más lenta: 5.03 s
+Peticiones lentas (>1 s) o fallidas, en segundos respecto al apagado:
+  t=+0.5s  código=200  tardó=5.03s
+Tras restaurar, la IP 172.30.0.250 está en presentation-keepalived-master
+

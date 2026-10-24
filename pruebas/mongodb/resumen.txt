@@ -1,0 +1,9 @@
+Complete requests:      18726
+Failed requests:        0
+Requests per second:    458.80 [#/sec] (mean)
+mongodb:27017 -> (not reachable/healthy)
+mongodb2:27017 -> PRIMARY
+mongodb3:27017 -> SECONDARY
+mongodb:27017 -> PRIMARY
+mongodb2:27017 -> SECONDARY
+mongodb3:27017 -> SECONDARY

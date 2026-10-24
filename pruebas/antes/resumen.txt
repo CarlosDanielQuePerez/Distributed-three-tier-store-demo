@@ -1,0 +1,6 @@
+Complete requests:      25392
+Failed requests:        10544
+Non-2xx responses:      10544
+Requests per second:    556.45 [#/sec] (mean)
+Variable_name	Value
+wsrep_cluster_size	3

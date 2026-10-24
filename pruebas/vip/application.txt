@@ -1,0 +1,15 @@
+=== application: apagado de application-lb-master ===
+Duración del 'docker compose stop': 1.1 s
+La IP 172.31.0.250 apareció en el backup 4.1 s después de ordenar el apagado
+Peticiones: 550 | no-200: 7 | más lenta: 4.08 s
+Peticiones lentas (>1 s) o fallidas, en segundos respecto al apagado:
+  t=+0.4s  código=502  tardó=0.00s
+  t=+0.5s  código=502  tardó=0.00s
+  t=+0.5s  código=502  tardó=0.00s
+  t=+0.6s  código=502  tardó=0.00s
+  t=+0.7s  código=502  tardó=0.00s
+  t=+0.7s  código=502  tardó=0.00s
+  t=+0.8s  código=502  tardó=0.00s
+  t=+0.9s  código=200  tardó=4.08s
+Tras restaurar, la IP 172.31.0.250 está en application-keepalived-master
+

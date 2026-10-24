@@ -1,0 +1,4 @@
+presentation-lb-master | apagado a las 15:03:41 | completadas: 18514 | Non-2xx: 0 | Failed: 1 | req/s: 617.13
+application-lb-master | apagado a las 15:04:44 | completadas: 5465 | Non-2xx: 7 | Failed: 7 | req/s: 177.90
+web1 | apagado a las 15:05:47 | completadas: 1526 | Non-2xx: 2 | Failed: 2 | req/s: 47.39
+app1 | apagado a las 15:06:48 | completadas: 15175 | Non-2xx: 22 | Failed: 22 | req/s: 493.77

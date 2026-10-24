@@ -1,0 +1,6 @@
+=== kill web1 a las 19:09:51 ===
+  t=+0.6s  código=503  tardó=20.00s
+  Tiempo total de espera anormal: 20.0 s
+=== kill app1 a las 19:11:06 ===
+  t=+0.3s  código=503  tardó=20.04s
+  Tiempo total de espera anormal: 20.0 s

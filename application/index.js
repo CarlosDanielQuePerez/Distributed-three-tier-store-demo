@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import { MongoClient } from "mongodb";
 import mysql from "mysql2/promise";
-import { createClient } from "redis";
+import { createSentinel } from "redis";
 
 const required = (name) => {
   const value = process.env[name];
@@ -21,21 +21,31 @@ const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
+const mongoHosts =
+  process.env.MONGO_HOSTS ||
+  `${required("MONGO_HOST")}:${Number(process.env.MONGO_PORT || 27017)}`;
+const mongoReplicaSet = process.env.MONGO_REPLICA_SET;
 const mongo = new MongoClient(
-  `mongodb://${required("MONGO_HOST")}:${Number(process.env.MONGO_PORT || 27017)}/${encodeURIComponent(required("MONGO_DB"))}`,
+  `mongodb://${mongoHosts}/${encodeURIComponent(required("MONGO_DB"))}` +
+    (mongoReplicaSet ? `?replicaSet=${encodeURIComponent(mongoReplicaSet)}&w=majority` : ""),
   {
     auth: {
       username: required("MONGO_USER"),
       password: required("MONGO_PASSWORD"),
     },
     authSource: "admin",
+    serverSelectionTimeoutMS: 5000,
   },
 );
-const redis = createClient({
-  socket: {
-    host: required("REDIS_HOST"),
-    port: Number(process.env.REDIS_PORT || 6379),
-  },
+const sentinelNodes = required("REDIS_SENTINELS")
+  .split(",")
+  .map((entry) => {
+    const [host, port] = entry.trim().split(":");
+    return { host, port: Number(port || 26379) };
+  });
+const redis = createSentinel({
+  name: process.env.REDIS_MASTER_NAME || "mymaster",
+  sentinelRootNodes: sentinelNodes,
 });
 redis.on("error", (error) => console.error("Redis client error:", error));
 
@@ -88,7 +98,7 @@ const start = async () => {
       const pathname = new URL(request.url, "http://localhost").pathname;
 
       if (request.method === "GET" && pathname === "/health") {
-        await Promise.all([pool.query("SELECT 1"), mongo.db().command({ ping: 1 }), redis.ping()]);
+        await Promise.all([pool.query("SELECT 1"), mongo.db().command({ ping: 1 }), redis.get("store:health-probe")]);
         sendJson(response, 200, { status: "ok" }, [...trace, "galera1", "mongodb", "redis"]);
         return;
       }
@@ -209,7 +219,7 @@ const start = async () => {
 
   const shutdown = () => {
     server.close(() => {
-      void Promise.all([pool.end(), mongo.close(), redis.quit()]).then(() => process.exit(0));
+      void Promise.all([pool.end(), mongo.close(), Promise.resolve(redis.close ? redis.close() : redis.destroy())]).then(() => process.exit(0));
     });
   };
   process.on("SIGINT", shutdown);
