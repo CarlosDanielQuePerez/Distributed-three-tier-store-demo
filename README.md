@@ -4,7 +4,7 @@ La pila (*stack*) sirve una tienda estática a través de tres nodos de presenta
 
 ## Arquitectura
 
-<img width="3280" height="900" alt="Distribución de tres niveles" src="https://github.com/user-attachments/assets/edce06a5-2015-4d82-b4c6-2c92b890f31a" />
+![Arquitectura final](application/arquitectura-final.png)
 
 Las solicitudes de listas de productos consultan Redis en primer lugar; si ocurre un fallo de caché (*cache miss*), se consulta a MariaDB y luego se pobla Redis. Las solicitudes de reseñas utilizan MongoDB, usando MariaDB para verificar el producto antes de insertar la reseña. En esta configuración de Compose en un solo host, el puerto 80 del host es publicado por el contenedor maestro de presentación; la VIP de presentación no traslada el mapeo de puertos del host de Docker durante una conmutación por error (*failover*).
 
