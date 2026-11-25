@@ -16,6 +16,11 @@ LABEL org.opencontainers.image.title="store-worker" \
       org.opencontainers.image.source="https://github.com/CarlosDanielQuePerez/Distributed-three-tier-store-demo" \
       org.opencontainers.image.version="${APP_VERSION}"
 WORKDIR /app
+# npm/npx/corepack/yarn solo hacen falta para instalar (etapa "deps"). Se quitan de la
+# imagen final: traen dependencias propias con CVEs (Trivy) y la app arranca con "node".
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+           /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /opt/yarn-* \
+           /usr/local/bin/yarn /usr/local/bin/yarnpkg
 COPY --from=deps /app/node_modules ./node_modules
 COPY worker/package.json worker/*.js ./
 COPY shared/*.js /shared/

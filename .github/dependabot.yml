@@ -1,7 +1,8 @@
 # Fase 7 — cadena de suministro: actualizaciones automáticas de dependencias.
 # Solo versiones menores y parches (seguridad), agrupadas para no saturar de PRs.
 # Los saltos de versión mayor (p. ej. Node 22 → 25, amqplib 0.x → 2.x) cambian APIs y se
-# hacen a mano, con pruebas: Dependabot no los propone.
+# hacen a mano, con pruebas: Dependabot no los propone. Los providers de Terraform se
+# actualizan a mano con "terraform init -upgrade" (versiones fijadas en .terraform.lock.hcl).
 version: 2
 updates:
   - package-ecosystem: npm
@@ -31,7 +32,3 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
-  - package-ecosystem: terraform
-    directories: ["/infra/terraform/envs/dev", "/infra/terraform/envs/prod"]
-    schedule: { interval: monthly }
-    open-pull-requests-limit: 2

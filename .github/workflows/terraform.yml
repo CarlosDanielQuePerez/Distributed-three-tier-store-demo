@@ -2,6 +2,9 @@
 # manual (environment "production" con revisores obligatorios).
 # Corre en un runner self-hosted dentro de la LAN porque los nodos K3s son
 # computadoras del equipo (no son accesibles desde los runners de GitHub).
+# Desactivado hasta registrar ese runner: crear la variable del repositorio
+# TF_SELF_HOSTED_RUNNER=true (Settings → Secrets and variables → Actions → Variables).
+# Sin ella los jobs se omiten en lugar de quedar "en cola" indefinidamente.
 name: terraform
 
 on:
@@ -16,7 +19,7 @@ permissions:
 
 jobs:
   plan:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && vars.TF_SELF_HOSTED_RUNNER == 'true'
     runs-on: [self-hosted, lan]
     permissions:
       contents: read
@@ -49,7 +52,7 @@ jobs:
             await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });
 
   apply:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.TF_SELF_HOSTED_RUNNER == 'true'
     runs-on: [self-hosted, lan]
     environment: production # requiere aprobación manual configurada en GitHub
     strategy:

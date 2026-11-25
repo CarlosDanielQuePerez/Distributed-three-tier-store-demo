@@ -266,8 +266,15 @@ En Docker Compose se agregaron `rabbitmq` (un nodo, consola en `127.0.0.1:15672`
 |----------|-----------|----------|
 | [ci.yml](../.github/workflows/ci.yml) | PR y push a main | ESLint + 34 pruebas unitarias (`node:test`); build de las 3 imágenes + **Trivy** (HIGH/CRITICAL con parche); `docker compose config`; `terraform fmt/validate`, **tflint**, **checkov**; `kustomize build` + **kubeconform** con esquemas de CRDs |
 | [release.yml](../.github/workflows/release.yml) | push a main, tags `v*` | push a GHCR, **SBOM** SPDX + provenance, firma **cosign keyless** (OIDC) y atestación del SBOM; en tags abre un **PR hacia `release`** con la nueva versión |
-| [terraform.yml](../.github/workflows/terraform.yml) | cambios en `infra/terraform` | `plan` comentado en el PR; `apply` solo desde `main` en el environment `production` (aprobación manual). Corre en un runner *self-hosted* de la LAN porque los nodos son computadoras del equipo |
+| [terraform.yml](../.github/workflows/terraform.yml) | cambios en `infra/terraform` | `plan` comentado en el PR; `apply` solo desde `main` en el environment `production` (aprobación manual). Corre en un runner *self-hosted* de la LAN porque los nodos son computadoras del equipo; está desactivado hasta crear la variable `TF_SELF_HOSTED_RUNNER=true` |
 | [dependabot.yml](../.github/dependabot.yml) | semanal | npm, Dockerfiles, Actions y providers de Terraform |
+
+**Imágenes mínimas y escaneadas**: la imagen final de la API y del worker no incluye
+`npm`, `npx` ni `corepack`; solo se usan para instalar dependencias en la etapa de
+construcción. El primer escaneo de Trivy en CI encontró CVEs HIGH en paquetes internos de
+npm (brace-expansion, pacote, sigstore, picomatch, ip-address); al quitarlo, las tres
+imágenes quedan con 0 vulnerabilidades HIGH/CRITICAL con parche disponible. Las
+dependencias de la propia aplicación no tenían ninguna.
 
 **Sin credenciales de larga duración**: GHCR usa el `GITHUB_TOKEN` efímero y cosign usa
 la identidad OIDC del workflow. Los únicos secretos del repositorio son los del estado de
