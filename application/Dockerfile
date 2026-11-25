@@ -2,12 +2,12 @@
 # Contexto de construcción: raíz del repositorio (usa shared/, messaging/ y database/).
 #   docker build -f application/Dockerfile -t store-api .
 
-FROM node:22.12.0-alpine3.21 AS deps
+FROM node:25.2.1-alpine3.21 AS deps
 WORKDIR /app
 COPY application/package.json application/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 
-FROM node:22.12.0-alpine3.21
+FROM node:25.2.1-alpine3.21
 ARG APP_VERSION=dev
 ENV NODE_ENV=production \
     APP_VERSION=${APP_VERSION} \
