@@ -2,12 +2,12 @@
 # Contexto de construcción: raíz del repositorio.
 #   docker build -f worker/Dockerfile -t store-worker .
 
-FROM node:22.12.0-alpine3.21 AS deps
+FROM node:22.23.5-alpine3.24 AS deps
 WORKDIR /app
 COPY worker/package.json worker/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 
-FROM node:22.12.0-alpine3.21
+FROM node:22.23.5-alpine3.24
 ARG APP_VERSION=dev
 ENV NODE_ENV=production \
     APP_VERSION=${APP_VERSION} \

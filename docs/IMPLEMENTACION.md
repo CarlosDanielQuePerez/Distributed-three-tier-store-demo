@@ -79,9 +79,9 @@ HAProxy y Keepalived ya no están en la ruta de producción; solo siguen en
 
 | Imagen | Dockerfile | Base | Usuario | Puerto |
 |--------|-----------|------|---------|--------|
-| `store-api` | [application/Dockerfile](../application/Dockerfile) | `node:22.12.0-alpine3.21` (multi-stage, `npm ci --omit=dev`) | 1000 | 8080 |
+| `store-api` | [application/Dockerfile](../application/Dockerfile) | `node:22.23.5-alpine3.24` (multi-stage, `npm ci --omit=dev`) | 1000 | 8080 |
 | `store-worker` | [worker/Dockerfile](../worker/Dockerfile) | igual | 1000 | 8081 (sondas) |
-| `store-web` | [web/Dockerfile](../web/Dockerfile) | `nginx:1.28.0-alpine-otel` | 101 | 8080 |
+| `store-web` | [web/Dockerfile](../web/Dockerfile) | `nginx:1.30.8-alpine-otel` | 101 | 8080 |
 
 Las tres funcionan con `readOnlyRootFilesystem: true` (Nginx escribe sus temporales en
 `/tmp` y genera `conf.d` en un `emptyDir`). El contexto de construcción es la raíz del

@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 # Imagen de presentación para Kubernetes: Nginx con ngx_otel_module, sin root.
 #   docker build -f web/Dockerfile -t store-web .
-FROM nginx:1.28.0-alpine-otel
+FROM nginx:1.30.8-alpine-otel
 
 ARG APP_VERSION=dev
 LABEL org.opencontainers.image.title="store-web" \
