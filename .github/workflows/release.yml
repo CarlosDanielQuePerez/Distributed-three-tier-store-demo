@@ -98,7 +98,7 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           git fetch origin "$GITHUB_SHA" && git checkout "$GITHUB_SHA" -- . ':!deploy/overlays/dev'
           sed -i -E "s/^(\s+newTag: ).*/\1${version}/" deploy/overlays/prod/kustomization.yaml
-      - uses: peter-evans/create-pull-request@v7
+      - uses: peter-evans/create-pull-request@v8
         with:
           base: release
           branch: promote/${{ github.ref_name }}
