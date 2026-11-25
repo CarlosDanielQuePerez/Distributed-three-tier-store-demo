@@ -15,7 +15,7 @@
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/auto-instrumentations-node": "^0.83.1",
     "@opentelemetry/instrumentation": "^0.301.0",
-    "amqplib": "^0.10.9",
+    "amqplib": "^2.4.0",
     "mongodb": "^6.17.0",
     "mysql2": "^3.14.1",
     "redis": "^5.5.6"
