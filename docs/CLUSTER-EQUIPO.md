@@ -1,6 +1,6 @@
 # Clúster K3s del equipo: 2 computadoras con Windows + WSL
 
-Guía paso a paso para armar el clúster real del Parcial 2. Hay un nodo en cada
+Guía paso a paso para armar el clúster real del Parcial 3. Hay un nodo en cada
 computadora:
 
 | Computadora | Nodo | Rol | Responsable |

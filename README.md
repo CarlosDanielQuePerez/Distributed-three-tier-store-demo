@@ -2,7 +2,7 @@
 
 La pila (*stack*) sirve una tienda estática a través de tres nodos de presentación Nginx. Su capa de aplicación en Node.js consulta un clúster de MariaDB Galera para obtener los diez productos más baratos, almacena en caché esa lista en Redis y guarda las reseñas de productos en MongoDB. Instancias de HAProxy distribuyen las solicitudes dentro de cada capa, y Keepalived proporciona una IP virtual (VIP) maestro/respaldo (*master/backup*) para cada par de HAProxy.
 
-## Migración a plataforma (Parcial 2)
+## Migración a plataforma (Parcial 3)
 
 Este repositorio implementa el [plan de migración de plataforma](https://github.com/tuxtter/distributedsystems/blob/main/PLATFORM-MIGRATION-PLAN.md): K3s con un nodo en cada computadora del equipo (2 computadoras: 1 server + 1 agent), Terraform, FluxCD (GitOps), GitHub Actions, RabbitMQ con un servicio `worker`, OpenTelemetry + Grafana LGTM y Wazuh. Docker Compose se mantiene como entorno de desarrollo.
 
