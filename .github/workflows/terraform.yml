@@ -33,7 +33,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.TF_GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.13.4
       - run: printf '%s' "${{ secrets.TF_BACKEND_HCL }}" > backend.hcl && printf '%s' "${{ secrets[format('TF_VARS_{0}', matrix.env)] }}" > terraform.tfvars
@@ -65,7 +65,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.TF_GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.13.4
       - run: printf '%s' "${{ secrets.TF_BACKEND_HCL }}" > backend.hcl && printf '%s' "${{ secrets[format('TF_VARS_{0}', matrix.env)] }}" > terraform.tfvars
