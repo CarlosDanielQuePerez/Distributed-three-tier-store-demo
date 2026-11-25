@@ -17,7 +17,7 @@
     "amqplib": "^0.10.9",
     "mongodb": "^6.17.0",
     "mysql2": "^3.14.1",
-    "redis": "^5.5.6"
+    "redis": "^6.3.1"
   },
   "overrides": {
     "rimraf": "^6.1.4",
