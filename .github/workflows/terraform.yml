@@ -40,7 +40,7 @@ jobs:
       - run: terraform init -input=false -backend-config=backend.hcl
       - id: plan
         run: terraform plan -input=false -no-color -lock-timeout=5m -out=tfplan | tee plan.txt
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
