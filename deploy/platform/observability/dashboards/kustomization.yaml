@@ -1,0 +1,12 @@
+# Dashboards como código. En prod los carga el sidecar del chart de Grafana (label
+# grafana_dashboard); en dev el Job grafana-dashboards-loader.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+generatorOptions:
+  disableNameSuffixHash: true
+  labels:
+    grafana_dashboard: "1"
+configMapGenerator:
+  - name: store-dashboards
+    files:
+      - store-overview.json

@@ -1,0 +1,97 @@
+# store: default-deny de entrada y salida; cada capa solo habla con la siguiente.
+#   Traefik → web:8080 → api:8080 → store-data (MaxScale, Mongo, Redis, RabbitMQ)
+#   worker → store-data;  todos → DNS y OTel Collector
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: default-deny-all }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: allow-dns-and-telemetry }
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: kube-system } }
+          podSelector: { matchLabels: { k8s-app: kube-dns } }
+      ports:
+        - { port: 53, protocol: UDP }
+        - { port: 53, protocol: TCP }
+    - to:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: observability } }
+      ports:
+        - { port: 4317, protocol: TCP }
+        - { port: 4318, protocol: TCP }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: web }
+spec:
+  podSelector: { matchLabels: { app.kubernetes.io/name: store-web } }
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: kube-system } }
+          podSelector: { matchLabels: { app.kubernetes.io/name: traefik } }
+        # Generadores de carga de las pruebas de desempeño (pruebas/plataforma).
+        - podSelector: { matchLabels: { store.role: load-generator } }
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: chaos-mesh } }
+      ports: [{ port: 8080, protocol: TCP }]
+  egress:
+    - to:
+        - podSelector: { matchLabels: { app.kubernetes.io/name: store-api } }
+      ports: [{ port: 8080, protocol: TCP }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: api }
+spec:
+  podSelector: { matchLabels: { app.kubernetes.io/name: store-api } }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app.kubernetes.io/name: store-web } }
+        - podSelector: { matchLabels: { store.role: load-generator } }
+      ports: [{ port: 8080, protocol: TCP }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: application-to-data }
+spec:
+  podSelector:
+    matchExpressions:
+      - { key: store.tier, operator: In, values: [application, init] }
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: store-data } }
+      ports:
+        - { port: 3306, protocol: TCP }
+        - { port: 27017, protocol: TCP }
+        - { port: 6379, protocol: TCP }
+        - { port: 26379, protocol: TCP }
+        - { port: 5672, protocol: TCP }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: load-generator }
+spec:
+  podSelector: { matchLabels: { store.role: load-generator } }
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector:
+            matchExpressions:
+              - { key: app.kubernetes.io/name, operator: In, values: [store-web, store-api] }
+      ports: [{ port: 8080, protocol: TCP }]
+    - to:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: kube-system } }
+      ports:
+        - { port: 80, protocol: TCP }
+        - { port: 443, protocol: TCP }
+        - { port: 8000, protocol: TCP }
+        - { port: 8443, protocol: TCP }

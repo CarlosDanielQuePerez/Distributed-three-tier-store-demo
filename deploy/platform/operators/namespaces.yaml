@@ -1,0 +1,48 @@
+# Pod Security Admission por capa:
+#  - store       (web, API, worker): restricted (no root, sin privilegios, seccomp)
+#  - store-data  (bases de datos y colas gestionadas por operadores): baseline
+#  - observability / wazuh: privileged (DaemonSets que leen logs y archivos del nodo)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: store
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: store-data
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: wazuh
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: metallb-system
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: chaos-mesh
+  labels:
+    pod-security.kubernetes.io/enforce: privileged

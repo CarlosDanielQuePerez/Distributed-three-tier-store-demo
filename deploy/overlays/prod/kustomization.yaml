@@ -1,0 +1,39 @@
+# Entorno prod: lo reconcilia el clúster prod desde la rama "release". Las etiquetas
+# semver se actualizan con un PR (release.yml) y la aprobación del PR es la puerta de
+# promoción. El worker escala por profundidad de cola con KEDA.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+components:
+  - ../../components/keda-worker
+images:
+  - name: store-api
+    newName: ghcr.io/carlosdanielqueperez/store-api
+    newTag: 2.0.0
+  - name: store-web
+    newName: ghcr.io/carlosdanielqueperez/store-web
+    newTag: 2.0.0
+  - name: store-worker
+    newName: ghcr.io/carlosdanielqueperez/store-worker
+    newTag: 2.0.0
+patches:
+  - target: { kind: ConfigMap, name: store-config }
+    patch: |
+      - op: replace
+        path: /data/DEPLOYMENT_ENVIRONMENT
+        value: prod
+      - op: replace
+        path: /data/GRAFANA_URL
+        value: https://grafana.store.prod.local
+      - op: replace
+        path: /data/OTEL_TRACES_SAMPLER_ARG
+        value: "0.25"
+  - target: { kind: Ingress, name: store }
+    patch: |
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: store.prod.local
+      - op: replace
+        path: /spec/rules/0/host
+        value: store.prod.local

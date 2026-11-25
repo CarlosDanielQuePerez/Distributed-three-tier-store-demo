@@ -1,0 +1,43 @@
+# TLS en el Ingress. En una LAN de laboratorio no hay DNS público, así que se usa una
+# CA propia: cert-manager genera la CA (autofirmada) y emite los certificados con ella.
+# Para un dominio público, cambiar el issuer del Ingress a "letsencrypt".
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-bootstrap
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: store-root-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: store-root-ca
+  secretName: store-root-ca
+  duration: 87600h # 10 años
+  privateKey: { algorithm: ECDSA, size: 256 }
+  issuerRef: { name: selfsigned-bootstrap, kind: ClusterIssuer }
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: store-ca
+spec:
+  ca:
+    secretName: store-root-ca
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: admin@example.com # reemplazar por un correo real si se usa
+    privateKeySecretRef: { name: letsencrypt-account-key }
+    solvers:
+      - http01:
+          ingress: { ingressClassName: traefik }

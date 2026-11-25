@@ -1,0 +1,49 @@
+$ curl -s http://localhost/api/readyz
+{"status":"ok","checks":{"mariadb":"ok","mongodb":"ok","redis":"ok","rabbitmq":"ok"}}
+
+$ curl -si http://localhost/api/products/cheapest   (la caché ya la calentó levantar.sh)
+HTTP/1.1 200 OK
+x-served-by: app2
+x-request-trace: presentation-lb-master -> webnode3 -> application-lb-master -> app2 -> redis (cache hit)
+
+$ curl -si http://localhost/api/products/cheapest   (otra vez: cache hit, otro nodo)
+HTTP/1.1 200 OK
+x-request-trace: presentation-lb-master -> webnode1 -> application-lb-master -> app1 -> redis (cache hit)
+
+$ POST reseña con Idempotency-Key: evidencia-0001  → 202 (cola RabbitMQ)
+{"status":"accepted","idempotencyKey":"evidencia-0001","sku":"ST-001"}
+  HTTP 202
+$ mismo POST otra vez (misma llave)
+{"status":"accepted","idempotencyKey":"evidencia-0001","sku":"ST-001"}
+  HTTP 202
+
+$ curl -s http://localhost/api/products/ST-001/reviews   (una sola reseña "Evidencia")
+            "reviewer": "Evidencia",
+            "comment": "Guardada por el worker desde RabbitMQ",
+            "comment": "Sturdy and convenient for grocery shopping.",
+            "reviewer": "Alex"
+
+$ PUT /api/products/ST-002/price sin token
+{"error":"Missing or invalid bearer token"}  HTTP 401
+$ PUT /api/products/ST-002/price con token  → catalog.changed
+{"sku":"ST-002","price":4.1,"cacheInvalidation":"queued"}  HTTP 200
+$ precio de ST-002 después de la invalidación
+[{'id': 5, 'sku': 'ST-002', 'name': 'Wooden Pencil Set', 'description': 'Pack of six graphite pencils.', 'price': '4.10'}]
+
+$ rabbitmqctl list_queues name messages consumers
+name	messages	consumers
+catalog.invalidate	0	2
+reviews.retry.1s	0	0
+catalog.refresh	0	2
+reviews.retry.30s	0	0
+reviews.dlq	0	0
+reviews.created	0	2
+reviews.retry.5s	0	0
+
+$ POST /api/cache/clear  y luego GET (cache miss → un worker repuebla la caché)
+{"cacheKey":"store:products:cheapest:v1","cacheEntryRemoved":true,"keysRemoved":1}
+x-request-trace: presentation-lb-master -> webnode3 -> application-lb-master -> app2 -> redis (cache miss) -> rabbitmq (catalog.refresh) -> redis (filled by worker)
+
+$ docker compose logs worker | grep "Catalog cache refreshed"
+"message":"Catalog cache refreshed","reason":"catalog-changed","products":10
+"message":"Catalog cache refreshed","reason":"cache-miss","products":10

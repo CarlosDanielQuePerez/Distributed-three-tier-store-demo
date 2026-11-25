@@ -1,0 +1,27 @@
+[1/6] Calentamiento
+[2/6] Página estática (Nginx)
++ ab -n 20000 -c 50 http://store-web.store.svc.cluster.local/
+[3/6] Catálogo a través de web → API → Redis (comparable con pruebas/despues)
++ ab -n 20000 -c 50 http://store-web.store.svc.cluster.local/api/products/cheapest
+[4/6] Catálogo directo a la API (sin Nginx)
++ ab -n 20000 -c 50 http://store-api.store.svc.cluster.local:8080/products/cheapest
+[5/6] Escrituras asíncronas: POST reseñas → RabbitMQ → worker → MongoDB
++ ab -n 5000 -c 50 -p /tmp/review.json -T application/json http://store-web.store.svc.cluster.local/api/products/ST-001/reviews
+cola reviews.created: antes=0 al_terminar_ab=2267 drenada_en=35s total=59s dlq=0
+[6/6] Ingress con límite de peticiones (Traefik rate-limit 100 req/s por IP)
++ ab -n 3000 -c 50 -H Host: store.local http://traefik.kube-system.svc.cluster.local/api/products/cheapest
+Plataforma K3s — 2026-11-24T16:22:29-05:00  contexto=k3d-store  n=20000 c=50
+  nodo k3d-store-agent-0 Ready v1.33.5+k3s1
+  nodo k3d-store-server-0 Ready v1.33.5+k3s1
+  deploy store-api 3/3
+  deploy store-web 2/2
+  deploy store-worker 2/2
+
+GET / (Nginx)                          completadas=20000   fallidas=0     no2xx=0      rps=863.86    p50=27ms p95=120ms p99=296ms max=5440ms
+GET /api/products/cheapest (web)       completadas=20000   fallidas=0     no2xx=0      rps=953.13    p50=35ms p95=126ms p99=531ms max=1098ms
+GET /products/cheapest (API)           completadas=20000   fallidas=0     no2xx=0      rps=927.52    p50=31ms p95=158ms p99=276ms max=676ms
+POST reseñas (202, cola)               completadas=5000    fallidas=0     no2xx=0      rps=241.91    p50=165ms p95=485ms p99=830ms max=1676ms
+cola reviews.created: antes=0 al_terminar_ab=2267 drenada_en=35s total=59s dlq=0
+Ingress (no2xx = 429 rate limit)       completadas=3000    fallidas=0     no2xx=2453   rps=767.95    p50=40ms p95=146ms p99=409ms max=514ms
+
+Resultados en pruebas/plataforma/20261124-162221/

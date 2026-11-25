@@ -1,0 +1,10 @@
+# Mata un pod de la API (equivalente K8s del escenario "app" del resilience-lab).
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata: { name: api-pod-kill, namespace: chaos-mesh }
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces: [store]
+    labelSelectors: { app.kubernetes.io/name: store-api }

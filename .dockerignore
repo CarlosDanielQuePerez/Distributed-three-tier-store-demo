@@ -1,0 +1,16 @@
+**/node_modules
+**/test
+.git
+.github
+.env
+.env.*
+**/.DS_Store
+pruebas
+resilience-lab
+infra
+deploy
+clusters
+docs
+nagios
+haproxy
+keepalived

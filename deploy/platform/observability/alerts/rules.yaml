@@ -1,0 +1,80 @@
+# Reglas de alerta en formato Prometheus (Mimir ruler). Las carga el Job mimir-rules-loader.
+# SLOs de la API (ventana de 30 días):
+#   - Disponibilidad: 99.5 % de respuestas no-5xx  → presupuesto de error 0.5 %
+#   - Latencia: 95 % de las peticiones < 300 ms
+# Alertas de burn-rate multi-ventana (Google SRE workbook): rápida 14.4x (1h & 5m),
+# lenta 6x (6h & 30m).
+namespace: store
+groups:
+  - name: store-slo
+    rules:
+      - record: store:api_error_ratio:rate5m
+        expr: sum(rate(http_server_request_duration_seconds_count{job="store-api",http_response_status_code=~"5.."}[5m])) / sum(rate(http_server_request_duration_seconds_count{job="store-api"}[5m]))
+      - record: store:api_error_ratio:rate30m
+        expr: sum(rate(http_server_request_duration_seconds_count{job="store-api",http_response_status_code=~"5.."}[30m])) / sum(rate(http_server_request_duration_seconds_count{job="store-api"}[30m]))
+      - record: store:api_error_ratio:rate1h
+        expr: sum(rate(http_server_request_duration_seconds_count{job="store-api",http_response_status_code=~"5.."}[1h])) / sum(rate(http_server_request_duration_seconds_count{job="store-api"}[1h]))
+      - record: store:api_error_ratio:rate6h
+        expr: sum(rate(http_server_request_duration_seconds_count{job="store-api",http_response_status_code=~"5.."}[6h])) / sum(rate(http_server_request_duration_seconds_count{job="store-api"}[6h]))
+      - alert: StoreApiErrorBudgetFastBurn
+        expr: store:api_error_ratio:rate1h > (14.4 * 0.005) and store:api_error_ratio:rate5m > (14.4 * 0.005)
+        labels: { severity: critical, slo: availability }
+        annotations:
+          summary: "La API consume el presupuesto de error 14x más rápido de lo permitido"
+          runbook: docs/runbooks/node-loss.md
+      - alert: StoreApiErrorBudgetSlowBurn
+        expr: store:api_error_ratio:rate6h > (6 * 0.005) and store:api_error_ratio:rate30m > (6 * 0.005)
+        for: 15m
+        labels: { severity: warning, slo: availability }
+        annotations:
+          summary: "La API consume el presupuesto de error 6x más rápido de lo permitido"
+      - alert: StoreApiLatencyP95High
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{job="store-api"}[5m]))) > 0.3
+        for: 10m
+        labels: { severity: warning, slo: latency }
+        annotations:
+          summary: "p95 de la API por encima de 300 ms durante 10 minutos"
+  - name: store-queues
+    rules:
+      - alert: StoreReviewsQueueBacklog
+        expr: max(store_queue_messages{queue="reviews.created"}) > 500
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Más de 500 reseñas esperando en reviews.created"
+          runbook: docs/runbooks/queue-backlog.md
+      - alert: StoreReviewsNoConsumers
+        expr: max(store_queue_consumers{queue="reviews.created"}) == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "reviews.created no tiene consumidores (consumer lag creciendo)"
+          runbook: docs/runbooks/queue-backlog.md
+      - alert: StoreDeadLetterQueueNotEmpty
+        expr: max(store_queue_messages{queue="reviews.dlq"}) > 0
+        for: 1m
+        labels: { severity: warning }
+        annotations:
+          summary: "Hay mensajes en reviews.dlq (fallaron todos los reintentos)"
+          runbook: docs/runbooks/queue-backlog.md
+  - name: store-data
+    rules:
+      - alert: StoreGaleraDegraded
+        expr: max(store_galera_cluster_size) < 3
+        for: 2m
+        labels: { severity: warning }
+        annotations:
+          summary: "Galera tiene menos de 3 nodos en el clúster"
+          runbook: docs/runbooks/node-loss.md
+      - alert: StoreGaleraNoQuorum
+        expr: max(store_galera_cluster_size) < 2
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "Galera sin quórum: escrituras del catálogo en riesgo"
+      - alert: StoreCacheHitRateLow
+        expr: sum(rate(store_cache_requests_total{result="hit"}[10m])) / sum(rate(store_cache_requests_total[10m])) < 0.7
+        for: 15m
+        labels: { severity: info }
+        annotations:
+          summary: "Cache hit rate del catálogo por debajo de 70 %"

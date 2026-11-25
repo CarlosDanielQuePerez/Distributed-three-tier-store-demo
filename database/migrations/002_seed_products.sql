@@ -1,13 +1,3 @@
-CREATE TABLE IF NOT EXISTS products (
-    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    sku VARCHAR(32) NOT NULL UNIQUE,
-    name VARCHAR(120) NOT NULL,
-    description VARCHAR(500) NOT NULL,
-    price DECIMAL(10, 2) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CHECK (price >= 0)
-);
-
 INSERT IGNORE INTO products (sku, name, description, price) VALUES
     ('ST-001', 'Cotton Tote Bag', 'Reusable natural cotton shopping bag.', 3.49),
     ('ST-002', 'Wooden Pencil Set', 'Pack of six graphite pencils.', 4.25),

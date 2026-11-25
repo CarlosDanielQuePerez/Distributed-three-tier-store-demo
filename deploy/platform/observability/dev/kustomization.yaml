@@ -1,0 +1,9 @@
+# dev: el gateway es grafana/otel-lgtm (Collector + Prometheus + Tempo + Loki + Grafana
+# en un pod). Ligero para laptops; sin alta disponibilidad ni persistencia.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: observability
+resources:
+  - ../base
+  - otel-lgtm.yaml
+  - ../dashboards

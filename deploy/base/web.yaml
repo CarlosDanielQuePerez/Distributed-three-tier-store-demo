@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: store-web
+  labels: { app.kubernetes.io/name: store-web, store.tier: presentation }
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector:
+    matchLabels: { app.kubernetes.io/name: store-web }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: store-web, store.tier: presentation }
+    spec:
+      serviceAccountName: store-web
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile: { type: RuntimeDefault }
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector: { matchLabels: { app.kubernetes.io/name: store-web } }
+      containers:
+        - name: nginx
+          image: store-web
+          imagePullPolicy: IfNotPresent
+          ports: [{ name: http, containerPort: 8080 }]
+          env:
+            - name: API_UPSTREAM
+              value: store-api.store.svc.cluster.local:8080
+            - name: OTEL_EXPORTER_OTLP_GRPC_ENDPOINT
+              value: otel-agent.observability.svc.cluster.local:4317
+            - name: OTEL_EXPORTER_OTLP_HTTP_ENDPOINT
+              value: http://otel-agent.observability.svc.cluster.local:4318
+            - name: OTEL_SERVICE_NAME
+              value: store-web
+            - name: GRAFANA_URL
+              valueFrom: { configMapKeyRef: { name: store-config, key: GRAFANA_URL } }
+          resources:
+            requests: { cpu: 50m, memory: 32Mi }
+            limits: { cpu: 500m, memory: 128Mi }
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 5
+          lifecycle:
+            # Da tiempo a que el endpoint salga del Service antes de cerrar conexiones.
+            preStop:
+              sleep: { seconds: 5 }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: confd, mountPath: /etc/nginx/conf.d }
+            - { name: cache, mountPath: /var/cache/nginx }
+      volumes:
+        - { name: tmp, emptyDir: { sizeLimit: 64Mi } }
+        - { name: confd, emptyDir: { sizeLimit: 1Mi } }
+        - { name: cache, emptyDir: { sizeLimit: 64Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: store-web
+  labels: { app.kubernetes.io/name: store-web }
+spec:
+  selector: { app.kubernetes.io/name: store-web }
+  ports:
+    - { name: http, port: 80, targetPort: http }

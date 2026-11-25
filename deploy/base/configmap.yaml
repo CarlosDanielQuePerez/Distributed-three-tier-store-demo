@@ -1,0 +1,36 @@
+# Configuración 12-factor (sin secretos). Los secretos llegan de store-app-secrets (SOPS).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: store-config
+data:
+  DB_HOST: store-maxscale.store-data.svc.cluster.local
+  DB_PORT: "3306"
+  DB_NAME: store
+  DB_USER: store_app
+  DB_MIGRATION_USER: store_migrator
+  DB_POOL_SIZE: "10"
+  MONGO_DB: store_reviews
+  # La conexión se arma por partes; la contraseña viene de store-app-secrets.
+  # (No se usa el Secret de cadena de conexión del operador en otro namespace: lleva un
+  # ownerReference entre namespaces y el recolector de basura de Kubernetes lo borra.)
+  MONGO_HOSTS: store-mongodb-0.store-mongodb-svc.store-data.svc.cluster.local:27017,store-mongodb-1.store-mongodb-svc.store-data.svc.cluster.local:27017,store-mongodb-2.store-mongodb-svc.store-data.svc.cluster.local:27017
+  MONGO_REPLICA_SET: store-mongodb
+  MONGO_USER: store-reviews-app
+  MONGO_AUTH_SOURCE: store_reviews
+  REDIS_SENTINELS: store-redis-sentinel-sentinel.store-data.svc.cluster.local:26379
+  REDIS_MASTER_NAME: mymaster
+  CACHE_TTL_SECONDS: "60"
+  CACHE_REFRESH_WAIT_MS: "1500"
+  REVIEWS_SYNC_FALLBACK: "true"
+  LEGACY_TRACE_HEADER: "false"
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-agent.observability.svc.cluster.local:4318
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  OTEL_TRACES_EXPORTER: otlp
+  OTEL_METRICS_EXPORTER: otlp
+  OTEL_LOGS_EXPORTER: none
+  OTEL_METRIC_EXPORT_INTERVAL: "15000"
+  OTEL_TRACES_SAMPLER: parentbased_traceidratio
+  OTEL_TRACES_SAMPLER_ARG: "1.0"
+  DEPLOYMENT_ENVIRONMENT: dev
+  GRAFANA_URL: ""

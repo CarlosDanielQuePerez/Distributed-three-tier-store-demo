@@ -1,0 +1,10 @@
+# Mata un nodo de Galera (escenario "galera1 caído" de pruebas/antes y pruebas/despues).
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata: { name: galera-pod-kill, namespace: chaos-mesh }
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces: [store-data]
+    labelSelectors: { app.kubernetes.io/instance: store-mariadb }

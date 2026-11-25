@@ -1,0 +1,60 @@
+### antes (17:54:08)
+  k3d-store-agent-0 Ready
+  k3d-store-server-0 Ready
+  store-mariadb-0                   true   k3d-store-server-0
+  store-mariadb-1                   true   k3d-store-server-0
+  store-mariadb-2                   true   k3d-store-agent-0
+  store-maxscale-0                  true   k3d-store-agent-0
+  store-maxscale-1                  true   k3d-store-server-0
+  store-mongodb-0                   true   k3d-store-agent-0
+  store-mongodb-1                   true   k3d-store-server-0
+  store-mongodb-2                   true   k3d-store-agent-0
+  store-rabbitmq-server-0           true   k3d-store-server-0
+  store-rabbitmq-server-1           true   k3d-store-server-0
+  store-rabbitmq-server-2           true   k3d-store-agent-0
+  store-redis-0                     true   k3d-store-agent-0
+  store-redis-1                     true   k3d-store-server-0
+  store-redis-2                     true   k3d-store-agent-0
+  store-redis-sentinel-sentinel-0   true   k3d-store-agent-0
+  store-redis-sentinel-sentinel-1   true   k3d-store-server-0
+  store-redis-sentinel-sentinel-2   true   k3d-store-agent-0
+### nodo apagado +60s (17:55:57)
+  k3d-store-agent-0 NotReady
+  k3d-store-server-0 Ready
+  store-mariadb-0                   true   k3d-store-server-0
+  store-mariadb-1                   true   k3d-store-server-0
+  store-mariadb-2                   true   k3d-store-agent-0
+  store-maxscale-0                  true   k3d-store-agent-0
+  store-maxscale-1                  true   k3d-store-server-0
+  store-mongodb-0                   true   k3d-store-agent-0
+  store-mongodb-1                   true   k3d-store-server-0
+  store-mongodb-2                   true   k3d-store-agent-0
+  store-rabbitmq-server-0           true   k3d-store-server-0
+  store-rabbitmq-server-1           true   k3d-store-server-0
+  store-rabbitmq-server-2           true   k3d-store-agent-0
+  store-redis-0                     true   k3d-store-agent-0
+  store-redis-1                     true   k3d-store-server-0
+  store-redis-2                     true   k3d-store-agent-0
+  store-redis-sentinel-sentinel-0   true   k3d-store-agent-0
+  store-redis-sentinel-sentinel-1   true   k3d-store-server-0
+  store-redis-sentinel-sentinel-2   true   k3d-store-agent-0
+### después (+30s de Ready) (17:58:58)
+  k3d-store-agent-0 Ready
+  k3d-store-server-0 Ready
+  store-mariadb-0                   true    k3d-store-server-0
+  store-mariadb-1                   true    k3d-store-server-0
+  store-mariadb-2                   false   k3d-store-agent-0
+  store-maxscale-0                  false   k3d-store-agent-0
+  store-maxscale-1                  true    k3d-store-server-0
+  store-mongodb-0                   true    k3d-store-agent-0
+  store-mongodb-1                   true    k3d-store-server-0
+  store-mongodb-2                   false   k3d-store-agent-0
+  store-rabbitmq-server-0           true    k3d-store-server-0
+  store-rabbitmq-server-1           true    k3d-store-server-0
+  store-rabbitmq-server-2           false   k3d-store-agent-0
+  store-redis-0                     true    k3d-store-agent-0
+  store-redis-1                     true    k3d-store-server-0
+  store-redis-2                     true    k3d-store-agent-0
+  store-redis-sentinel-sentinel-0   true    k3d-store-agent-0
+  store-redis-sentinel-sentinel-1   true    k3d-store-server-0
+  store-redis-sentinel-sentinel-2   true    k3d-store-agent-0

@@ -1,0 +1,9 @@
+# SOPS + age: los Secrets de deploy/secrets/<env>/ se versionan cifrados.
+# 1. age-keygen -o age.key            (age.key NUNCA se sube; está en .gitignore)
+# 2. Sustituye la llave pública de abajo por la tuya (age1...).
+# 3. scripts/generate-secrets.sh dev   → crea deploy/secrets/dev/store-secrets.sops.yaml cifrado
+# Flux descifra con el Secret flux-system/sops-age (lo crea Terraform desde age.key).
+creation_rules:
+  - path_regex: deploy/secrets/.*\.sops\.yaml$
+    encrypted_regex: ^(data|stringData)$
+    age: age1replacewithyourpublickeyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

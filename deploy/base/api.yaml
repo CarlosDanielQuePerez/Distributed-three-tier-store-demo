@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: store-api
+  labels: { app.kubernetes.io/name: store-api, store.tier: application }
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector:
+    matchLabels: { app.kubernetes.io/name: store-api }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: store-api, store.tier: application }
+    spec:
+      serviceAccountName: store-api
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector: { matchLabels: { app.kubernetes.io/name: store-api } }
+      containers:
+        - name: api
+          image: store-api
+          imagePullPolicy: IfNotPresent
+          ports: [{ name: http, containerPort: 8080 }]
+          envFrom:
+            - configMapRef: { name: store-config }
+          env:
+            - name: POD_NAME
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+            - name: NODE_NAME
+              valueFrom: { fieldRef: { fieldPath: spec.nodeName } }
+            - name: APPLICATION_NODE
+              value: $(POD_NAME)
+            - name: OTEL_SERVICE_NAME
+              value: store-api
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: deployment.environment.name=$(DEPLOYMENT_ENVIRONMENT),k8s.pod.name=$(POD_NAME),k8s.node.name=$(NODE_NAME),k8s.namespace.name=store
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: store-app-secrets, key: DB_PASSWORD } }
+            - name: REDIS_PASSWORD
+              valueFrom: { secretKeyRef: { name: store-app-secrets, key: REDIS_PASSWORD } }
+            - name: RABBITMQ_URL
+              valueFrom: { secretKeyRef: { name: store-app-secrets, key: RABBITMQ_URL } }
+            - name: API_ADMIN_TOKEN
+              valueFrom: { secretKeyRef: { name: store-app-secrets, key: API_ADMIN_TOKEN } }
+            - name: MONGO_PASSWORD
+              valueFrom: { secretKeyRef: { name: store-app-secrets, key: MONGO_PASSWORD } }
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: "1", memory: 256Mi }
+          startupProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 2
+            failureThreshold: 30
+          # Holgada a propósito: un pico de carga no debe reiniciar pods sanos
+          # (la readiness ya los saca del Service mientras tanto).
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            httpGet: { path: /readyz, port: http }
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: { sizeLimit: 64Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: store-api
+  labels: { app.kubernetes.io/name: store-api }
+spec:
+  selector: { app.kubernetes.io/name: store-api }
+  ports:
+    - { name: http, port: 8080, targetPort: http }

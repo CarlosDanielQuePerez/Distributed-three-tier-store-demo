@@ -1,0 +1,158 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata: { name: loki, namespace: observability }
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: loki
+      version: "6.55.0"
+      sourceRef: { kind: HelmRepository, name: grafana, namespace: flux-system }
+  install: { remediation: { retries: 3 } }
+  values:
+    deploymentMode: SingleBinary
+    loki:
+      auth_enabled: false
+      commonConfig: { replication_factor: 1 }
+      storage: { type: filesystem }
+      schemaConfig:
+        configs:
+          - from: "2024-04-01"
+            store: tsdb
+            object_store: filesystem
+            schema: v13
+            index: { prefix: loki_index_, period: 24h }
+      limits_config:
+        allow_structured_metadata: true
+        retention_period: 168h
+    singleBinary:
+      replicas: 1
+      persistence: { enabled: true, size: 10Gi }
+    read: { replicas: 0 }
+    write: { replicas: 0 }
+    backend: { replicas: 0 }
+    chunksCache: { enabled: false }
+    resultsCache: { enabled: false }
+    lokiCanary: { enabled: false }
+    test: { enabled: false }
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata: { name: tempo, namespace: observability }
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: tempo
+      version: "1.24.4"
+      sourceRef: { kind: HelmRepository, name: grafana, namespace: flux-system }
+  install: { remediation: { retries: 3 } }
+  values:
+    tempo:
+      retention: 168h
+      receivers:
+        otlp:
+          protocols:
+            grpc: { endpoint: 0.0.0.0:4317 }
+            http: { endpoint: 0.0.0.0:4318 }
+      metricsGenerator:
+        enabled: true
+        remoteWriteUrl: http://mimir-gateway.observability.svc.cluster.local/api/v1/push
+    persistence: { enabled: true, size: 10Gi }
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata: { name: mimir, namespace: observability }
+spec:
+  interval: 30m
+  timeout: 15m
+  chart:
+    spec:
+      chart: mimir-distributed
+      version: "5.8.1"
+      sourceRef: { kind: HelmRepository, name: grafana, namespace: flux-system }
+  install: { remediation: { retries: 3 } }
+  values:
+    # Tamaño mínimo para un laboratorio de 3 nodos; MinIO interno como object storage.
+    minio: { enabled: true }
+    gateway: { enabledNonEnterprise: true }
+    nginx: { enabled: false }
+    mimir:
+      structuredConfig:
+        multitenancy_enabled: false
+        limits:
+          max_global_series_per_user: 300000
+          ingestion_rate: 50000
+          compactor_blocks_retention_period: 15d
+    ingester:
+      replicas: 3
+      zoneAwareReplication: { enabled: false }
+      persistentVolume: { size: 5Gi }
+    store_gateway:
+      replicas: 1
+      zoneAwareReplication: { enabled: false }
+    distributor: { replicas: 1 }
+    querier: { replicas: 1 }
+    query_frontend: { replicas: 1 }
+    ruler: { replicas: 1 }
+    alertmanager: { replicas: 1, persistentVolume: { size: 1Gi } }
+    compactor: { replicas: 1, persistentVolume: { size: 5Gi } }
+    overrides_exporter: { enabled: false }
+    rollout_operator: { enabled: false }
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata: { name: grafana, namespace: observability }
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: grafana
+      version: "8.15.0"
+      sourceRef: { kind: HelmRepository, name: grafana, namespace: flux-system }
+  install: { remediation: { retries: 3 } }
+  values:
+    admin:
+      existingSecret: grafana-admin
+      userKey: admin-user
+      passwordKey: admin-password
+    persistence: { enabled: true, size: 2Gi }
+    sidecar:
+      dashboards: { enabled: true, label: grafana_dashboard, searchNamespace: ALL }
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      annotations: { cert-manager.io/cluster-issuer: store-ca }
+      hosts: [grafana.store.prod.local]
+      tls: [{ secretName: grafana-tls, hosts: [grafana.store.prod.local] }]
+    datasources:
+      datasources.yaml:
+        apiVersion: 1
+        datasources:
+          - name: Mimir
+            uid: prometheus
+            type: prometheus
+            url: http://mimir-gateway.observability.svc.cluster.local/prometheus
+            isDefault: true
+            jsonData:
+              exemplarTraceIdDestinations: [{ name: trace_id, datasourceUid: tempo }]
+          - name: Loki
+            uid: loki
+            type: loki
+            url: http://loki-gateway.observability.svc.cluster.local
+            jsonData:
+              derivedFields:
+                - { name: trace_id, matcherRegex: '"trace_id":"(\w+)"', url: "$${__value.raw}", datasourceUid: tempo }
+          - name: Tempo
+            uid: tempo
+            type: tempo
+            url: http://tempo.observability.svc.cluster.local:3100
+            jsonData:
+              tracesToLogsV2: { datasourceUid: loki, filterByTraceID: true }
+              serviceMap: { datasourceUid: prometheus }
+              nodeGraph: { enabled: true }
+          - name: Alertmanager
+            uid: alertmanager
+            type: alertmanager
+            url: http://mimir-gateway.observability.svc.cluster.local
+            jsonData: { implementation: mimir }

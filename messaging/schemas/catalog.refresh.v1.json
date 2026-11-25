@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "store/catalog.refresh/v1",
+  "title": "catalog.refresh v1",
+  "description": "Pide a un único worker (single active consumer) repoblar la caché del catálogo. Lo publica la API ante un cache miss (protegido con un candado en Redis) o el worker tras una invalidación.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "version", "occurredAt", "data"],
+  "properties": {
+    "type": { "const": "catalog.refresh" },
+    "version": { "const": 1 },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cacheKey", "reason"],
+      "properties": {
+        "cacheKey": { "type": "string" },
+        "reason": { "enum": ["cache-miss", "catalog-changed", "manual"] }
+      }
+    }
+  }
+}

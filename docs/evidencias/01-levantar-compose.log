@@ -1,0 +1,746 @@
+.env ya existía; se agregaron 0 variable(s) nuevas
+ Image distributed-three-tier-api Building 
+ Image distributed-three-tier-api Building 
+ Image distributed-three-tier-mongo Building 
+ Image distributed-three-tier-presentation-keepalived-backup Building 
+ Image distributed-three-tier-mongo Building 
+ Image distributed-three-tier-application-keepalived-backup Building 
+ Image distributed-three-tier-api Building 
+ Image distributed-three-tier-mongo Building 
+ Image distributed-three-tier-mongo Building 
+ Image distributed-three-tier-application-keepalived-master Building 
+ Image distributed-three-tier-api Building 
+ Image distributed-three-tier-worker Building 
+ Image distributed-three-tier-presentation-keepalived-master Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 7.42kB done
+#1 DONE 0.0s
+
+#2 [worker internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.08kB 0.0s done
+#2 DONE 0.1s
+
+#3 [mongo-init internal] load build definition from Dockerfile
+#3 transferring dockerfile: 277B 0.0s done
+#3 DONE 0.1s
+
+#4 [presentation-keepalived-backup internal] load build definition from Dockerfile
+#4 transferring dockerfile: 508B 0.0s done
+#4 DONE 0.1s
+
+#5 [catalog-init internal] load build definition from Dockerfile
+#5 transferring dockerfile: 1.34kB 0.0s done
+#5 DONE 0.1s
+
+#6 [app2] resolve image config for docker-image://docker.io/docker/dockerfile:1.7
+#6 ...
+
+#7 [mongodb3 internal] load metadata for docker.io/library/mongo:8
+#7 DONE 0.3s
+
+#8 [mongodb internal] load .dockerignore
+#8 transferring context: 2B done
+#8 DONE 0.0s
+
+#9 [mongodb3 1/2] FROM docker.io/library/mongo:8@sha256:0e900a3364da37b76d642b73b0bba56bd4c6c509ab470cf700436fd866bee3ff
+#9 resolve docker.io/library/mongo:8@sha256:0e900a3364da37b76d642b73b0bba56bd4c6c509ab470cf700436fd866bee3ff 0.0s done
+#9 DONE 0.1s
+
+#10 [mongodb2 2/2] RUN head -c 512 /dev/urandom | base64 -w0 > /etc/mongo-keyfile  && chmod 400 /etc/mongo-keyfile  && chown mongodb:mongodb /etc/mongo-keyfile
+#10 CACHED
+
+#11 [mongodb] exporting to image
+#11 exporting layers 0.0s done
+#11 exporting manifest sha256:67fc320a789e56dc2cb18bbe5b15059ca3d1061056f2e5a6dd262baadabfdda7 done
+#11 exporting config sha256:169cbaebd3b73704032b691e5df9f3e416b2d6a054b5a065e88d3868713aba9d 0.0s done
+#11 exporting attestation manifest sha256:fb04fba1a3654417a4a567b9ee620de44e0b9621169d05d80179a65cd637e6ce
+#11 exporting attestation manifest sha256:fb04fba1a3654417a4a567b9ee620de44e0b9621169d05d80179a65cd637e6ce 0.1s done
+#11 exporting manifest list sha256:328f1e6f0d3901ac19c02d9c8f1aa601dab22ec5dbc43a885ea4d9746f29f4a1 0.1s done
+#11 naming to docker.io/library/distributed-three-tier-mongo:latest
+#11 naming to docker.io/library/distributed-three-tier-mongo:latest 0.0s done
+#11 unpacking to docker.io/library/distributed-three-tier-mongo:latest
+#11 unpacking to docker.io/library/distributed-three-tier-mongo:latest 0.1s done
+#11 DONE 0.6s
+
+#12 [mongo-init] exporting to image
+#12 exporting layers 0.0s done
+#12 exporting manifest sha256:b96575658a030b62551c5cfc1747385b419f0617527a0f8f160367e896f430c7 0.0s done
+#12 exporting config sha256:666fc670c5d97ed991693df218e88c70ae0febcc7da0bfe3e5993d49321d38b4 0.1s done
+#12 exporting attestation manifest sha256:f9da51a9a5d33d661697fa82dcf356e7873f551fb06b96c9974f574d42f33a56 0.2s done
+#12 exporting manifest list sha256:46a646bdce492c6646da278298e7d2196effc50d2c6aa9f70c943e9d12ebe36c 0.1s done
+#12 naming to docker.io/library/distributed-three-tier-mongo:latest 0.0s done
+#12 unpacking to docker.io/library/distributed-three-tier-mongo:latest 0.0s done
+#12 DONE 0.7s
+
+#13 [mongodb3] exporting to image
+#13 exporting layers 0.0s done
+#13 exporting manifest sha256:722e93be63bb286f1adb4e6a3b2ed3940fc81e7f4a51f02010acec27ba329102 0.1s done
+#13 exporting config sha256:e89d3666989054736927505e15d6428d94ea2cbf906a55bdceed7b65cb211a70 0.0s done
+#13 exporting attestation manifest sha256:c8cf44424735e0692ee73c5d63f1bafb329c4e509b631fe13ed7948785efc0bb 0.2s done
+#13 exporting manifest list sha256:a0e2703c720b7982efa442a2c88e843f2ba2679ffd10a34d61675a00fbdfa73d 0.1s done
+#13 naming to docker.io/library/distributed-three-tier-mongo:latest 0.0s done
+#13 unpacking to docker.io/library/distributed-three-tier-mongo:latest 0.0s done
+#13 ...
+
+#14 [mongodb2] exporting to image
+#14 exporting layers 0.0s done
+#14 exporting manifest sha256:36e12228a35a4f2f4a3e6de98a0ab98fa12a544191e4e2ffae69ff024058ae6b 0.0s done
+#14 exporting config sha256:ee9590b019729809b9e6c111ec7c1d4f041d98f247c7b2a598ccda098e0bbe05 0.1s done
+#14 exporting attestation manifest sha256:3f1c336c1c5d3a7c953808a6d1b66e79cf6cb31e41f2593c212ecb62fe3fd045 0.2s done
+#14 exporting manifest list sha256:4035acc2ee1fe5593029e27e09703653756bdf2165da48b6059994d6c87280df 0.1s done
+#14 naming to docker.io/library/distributed-three-tier-mongo:latest 0.0s done
+#14 unpacking to docker.io/library/distributed-three-tier-mongo:latest 0.0s done
+#14 DONE 0.7s
+
+#13 [mongodb3] exporting to image
+#13 DONE 0.9s
+
+#15 [application-keepalived-master internal] load metadata for docker.io/library/alpine:3.21
+#15 DONE 1.8s
+
+#6 [catalog-init] resolve image config for docker-image://docker.io/docker/dockerfile:1.7
+#6 DONE 1.8s
+
+#16 [application-keepalived-backup internal] load .dockerignore
+#16 transferring context: 2B done
+#16 DONE 0.0s
+
+#17 [application-keepalived-backup internal] load build context
+#17 DONE 0.0s
+
+#18 [application-keepalived-master internal] load build context
+#18 DONE 0.0s
+
+#19 [presentation-keepalived-backup internal] load build context
+#19 DONE 0.0s
+
+#20 [presentation-keepalived-master internal] load build context
+#20 DONE 0.0s
+
+#21 [presentation-keepalived-master 1/6] FROM docker.io/library/alpine:3.21@sha256:bc21487101ae47172509130ee1092cc273a831968d64b617776d1f69c81e42ab
+#21 resolve docker.io/library/alpine:3.21@sha256:bc21487101ae47172509130ee1092cc273a831968d64b617776d1f69c81e42ab
+#21 ...
+
+#22 [catalog-init] docker-image://docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
+#22 resolve docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e 0.1s done
+#22 CACHED
+
+#21 [application-keepalived-master 1/6] FROM docker.io/library/alpine:3.21@sha256:bc21487101ae47172509130ee1092cc273a831968d64b617776d1f69c81e42ab
+#21 resolve docker.io/library/alpine:3.21@sha256:bc21487101ae47172509130ee1092cc273a831968d64b617776d1f69c81e42ab 0.1s done
+#21 resolve docker.io/library/alpine:3.21@sha256:bc21487101ae47172509130ee1092cc273a831968d64b617776d1f69c81e42ab 0.1s done
+#21 DONE 0.1s
+
+#23 [mongodb] resolving provenance for metadata file
+#23 ...
+
+#20 [presentation-keepalived-master internal] load build context
+#20 transferring context: 755B 0.1s done
+#20 DONE 0.2s
+
+#18 [application-keepalived-master internal] load build context
+#18 transferring context: 754B 0.0s done
+#18 DONE 0.2s
+
+#17 [application-keepalived-backup internal] load build context
+#17 transferring context: 754B 0.1s done
+#17 DONE 0.3s
+
+#19 [presentation-keepalived-backup internal] load build context
+#19 transferring context: 755B 0.1s done
+#19 DONE 0.3s
+
+#24 [mongo-init] resolving provenance for metadata file
+#24 ...
+
+#25 [presentation-keepalived-master 5/6] COPY presentation-master.conf /etc/keepalived/keepalived.conf
+#25 CACHED
+
+#26 [presentation-keepalived-master 4/6] RUN chmod 0755 /usr/local/bin/check-haproxy.sh
+#26 CACHED
+
+#27 [presentation-keepalived-master 3/6] COPY check-haproxy.sh /usr/local/bin/check-haproxy.sh
+#27 CACHED
+
+#28 [presentation-keepalived-master 6/6] RUN chmod 0644 /etc/keepalived/keepalived.conf
+#28 CACHED
+
+#29 [application-keepalived-backup 3/6] COPY check-haproxy.sh /usr/local/bin/check-haproxy.sh
+#29 CACHED
+
+#30 [application-keepalived-backup 4/6] RUN chmod 0755 /usr/local/bin/check-haproxy.sh
+#30 CACHED
+
+#31 [application-keepalived-backup 5/6] COPY application-backup.conf /etc/keepalived/keepalived.conf
+#31 CACHED
+
+#32 [application-keepalived-backup 2/6] RUN apk add --no-cache keepalived busybox-extras
+#32 CACHED
+
+#33 [application-keepalived-backup 6/6] RUN chmod 0644 /etc/keepalived/keepalived.conf
+#33 CACHED
+
+#34 [application-keepalived-master 4/6] RUN chmod 0755 /usr/local/bin/check-haproxy.sh
+#34 CACHED
+
+#35 [application-keepalived-master 5/6] COPY application-master.conf /etc/keepalived/keepalived.conf
+#35 CACHED
+
+#36 [application-keepalived-master 3/6] COPY check-haproxy.sh /usr/local/bin/check-haproxy.sh
+#36 CACHED
+
+#37 [application-keepalived-master 6/6] RUN chmod 0644 /etc/keepalived/keepalived.conf
+#37 CACHED
+
+#38 [presentation-keepalived-backup 5/6] COPY presentation-backup.conf /etc/keepalived/keepalived.conf
+#38 CACHED
+
+#32 [presentation-keepalived-backup 2/6] RUN apk add --no-cache keepalived busybox-extras
+#32 CACHED
+
+#39 [presentation-keepalived-backup 3/6] COPY check-haproxy.sh /usr/local/bin/check-haproxy.sh
+#39 CACHED
+
+#40 [presentation-keepalived-backup 4/6] RUN chmod 0755 /usr/local/bin/check-haproxy.sh
+#40 CACHED
+
+#41 [presentation-keepalived-backup 6/6] RUN chmod 0644 /etc/keepalived/keepalived.conf
+#41 CACHED
+
+#42 [presentation-keepalived-backup] exporting to image
+#42 exporting layers 0.0s done
+#42 exporting manifest sha256:7b074b10d902932a40024b328e37e4de65193c71f17ea15bb351feb581133fda 0.1s done
+#42 exporting config sha256:45a3539c2fce76746003d44fd92d3401cc5cfae9ec66e1a79a14a43a5d53e007
+#42 exporting config sha256:45a3539c2fce76746003d44fd92d3401cc5cfae9ec66e1a79a14a43a5d53e007 0.0s done
+#42 ...
+
+#43 [app1 internal] load build definition from Dockerfile
+#43 transferring dockerfile: 1.34kB 0.0s done
+#43 DONE 0.1s
+
+#44 [app2 internal] load build definition from Dockerfile
+#44 transferring dockerfile: 1.34kB 0.0s done
+#44 DONE 0.1s
+
+#45 [app3 internal] load build definition from Dockerfile
+#45 transferring dockerfile: 1.34kB 0.0s done
+#45 DONE 0.1s
+
+#46 [catalog-init internal] load build definition from Dockerfile
+#46 transferring dockerfile: 1.34kB 0.0s done
+#46 DONE 0.2s
+
+#47 [app3 internal] load metadata for docker.io/library/node:22.12.0-alpine3.21
+#47 ...
+
+#48 [mongodb2] resolving provenance for metadata file
+#48 DONE 0.7s
+
+#24 [mongo-init] resolving provenance for metadata file
+#24 DONE 1.0s
+
+#23 [mongodb] resolving provenance for metadata file
+#23 DONE 1.0s
+
+#49 [mongodb3] resolving provenance for metadata file
+#49 DONE 0.0s
+
+#50 [presentation-keepalived-master] exporting to image
+#50 exporting layers 0.0s done
+#50 exporting manifest sha256:6db3978b2d93c9e4040800c3f9b57ef0b33a0059c08cf99d8c65f6a66d105ac1 0.0s done
+#50 exporting config sha256:f4217f461a7092e97f44046d0cb9f8fb0ad6df4a84c3bbc679bb4bd1ca3dcb4a 0.0s done
+#50 exporting attestation manifest sha256:fd177bebe1b4b8aa323733f4d002cbf38cbcb533866880119e3513a4b16beda1 0.3s done
+#50 exporting manifest list sha256:a272cd3016e2048749d9bdcc566a998815065ce067554ebbe21315b8aed9f751 0.1s done
+#50 naming to docker.io/library/distributed-three-tier-presentation-keepalived-master:latest 0.0s done
+#50 unpacking to docker.io/library/distributed-three-tier-presentation-keepalived-master:latest 0.1s done
+#50 DONE 0.8s
+
+#51 [application-keepalived-master] exporting to image
+#51 exporting layers 0.0s done
+#51 exporting manifest sha256:f5bcc13d5ae0c71a0664f9c5e80d6bbfc9bc7670c159821852fa371e34a5572f 0.0s done
+#51 exporting config sha256:b4a9846bcf2dfa6ec621670d451f4a8d588a86003aee6319c7d86ab904660537 0.0s done
+#51 exporting attestation manifest sha256:77a673e8f0d5266e6004c3077558e67dde9e9ddeacc28dbba7205d1c50a343d8 0.2s done
+#51 exporting manifest list sha256:30aa1abe017aa5faa7371415b6fb94b6053944e52395b840e1697758a2aac04d 0.1s done
+#51 naming to docker.io/library/distributed-three-tier-application-keepalived-master:latest 0.0s done
+#51 unpacking to docker.io/library/distributed-three-tier-application-keepalived-master:latest 0.0s done
+#51 DONE 0.8s
+
+#52 [application-keepalived-backup] exporting to image
+#52 exporting layers 0.0s done
+#52 exporting manifest sha256:8ec1aeeecb61f85b1d805a7cfb9f789a7df2bd310cdfdd0d68dcb59e40ab5f23 0.0s done
+#52 exporting config sha256:722718e91614f28ee892c3580890311993f8da96edb8aa0ed10378563ea6c127 0.0s done
+#52 exporting attestation manifest sha256:e23019cf6b37c034df49ee3af918a61e3da6ae7628219d32209c8898e6533d55 0.2s done
+#52 exporting manifest list sha256:3f215a437af0bc5607dec3dbca2f6e9dbf352809a71ca70a9073731eec0fdab9 0.1s done
+#52 naming to docker.io/library/distributed-three-tier-application-keepalived-backup:latest 0.0s done
+#52 unpacking to docker.io/library/distributed-three-tier-application-keepalived-backup:latest 0.0s done
+#52 DONE 0.8s
+
+#42 [presentation-keepalived-backup] exporting to image
+#42 exporting attestation manifest sha256:e7d9bd15d83ae9b460f6ff1d9a8a1916c204f91d4096affa1b6682c85c93fef7 0.2s done
+#42 exporting manifest list sha256:ed85da2174584846440d67afa0fbb5645ce2f60daab02674ec95d126814324e2 0.1s done
+#42 naming to docker.io/library/distributed-three-tier-presentation-keepalived-backup:latest 0.0s done
+#42 unpacking to docker.io/library/distributed-three-tier-presentation-keepalived-backup:latest 0.0s done
+#42 DONE 0.8s
+
+#47 [app3 internal] load metadata for docker.io/library/node:22.12.0-alpine3.21
+#47 DONE 1.0s
+
+#53 [catalog-init internal] load .dockerignore
+#53 transferring context: 180B 0.0s done
+#53 DONE 0.1s
+
+#54 [app2 internal] load .dockerignore
+#54 transferring context: 180B 0.0s done
+#54 DONE 0.1s
+
+#55 [app1 internal] load .dockerignore
+#55 transferring context: 180B 0.0s done
+#55 DONE 0.1s
+
+#56 [worker internal] load .dockerignore
+#56 transferring context: 180B 0.0s done
+#56 DONE 0.2s
+
+#57 [presentation-keepalived-master] resolving provenance for metadata file
+#57 ...
+
+#58 [app3 internal] load .dockerignore
+#58 transferring context: 180B 0.0s done
+#58 DONE 0.3s
+
+#59 [catalog-init internal] load build context
+#59 transferring context: 1.18kB 0.0s done
+#59 DONE 0.1s
+
+#60 [worker deps 1/4] FROM docker.io/library/node:22.12.0-alpine3.21@sha256:51eff88af6dff26f59316b6e356188ffa2c422bd3c3b76f2556a2e7e89d080bd
+#60 resolve docker.io/library/node:22.12.0-alpine3.21@sha256:51eff88af6dff26f59316b6e356188ffa2c422bd3c3b76f2556a2e7e89d080bd 0.1s done
+#60 DONE 0.1s
+
+#57 [presentation-keepalived-master] resolving provenance for metadata file
+#57 DONE 0.2s
+
+#61 [catalog-init stage-1 3/7] COPY --from=deps /app/node_modules ./node_modules
+#61 CACHED
+
+#62 [catalog-init stage-1 4/7] COPY application/package.json application/*.js ./
+#62 CACHED
+
+#63 [catalog-init deps 3/4] COPY application/package.json application/package-lock.json ./
+#63 CACHED
+
+#64 [catalog-init deps 4/4] RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
+#64 CACHED
+
+#65 [catalog-init stage-1 5/7] COPY database/migrations ./database/migrations
+#65 CACHED
+
+#66 [catalog-init stage-1 6/7] COPY shared/*.js /shared/
+#66 CACHED
+
+#67 [catalog-init deps 2/4] WORKDIR /app
+#67 CACHED
+
+#68 [catalog-init stage-1 7/7] COPY messaging /messaging
+#68 CACHED
+
+#69 [worker internal] load build context
+#69 ...
+
+#60 [app3 deps 1/4] FROM docker.io/library/node:22.12.0-alpine3.21@sha256:51eff88af6dff26f59316b6e356188ffa2c422bd3c3b76f2556a2e7e89d080bd
+#60 resolve docker.io/library/node:22.12.0-alpine3.21@sha256:51eff88af6dff26f59316b6e356188ffa2c422bd3c3b76f2556a2e7e89d080bd 0.1s done
+#60 DONE 0.1s
+
+#68 [app1 stage-1 7/7] COPY messaging /messaging
+#68 CACHED
+
+#70 [app1 internal] load build context
+#70 transferring context: 152.12kB 0.1s done
+#70 DONE 0.2s
+
+#71 [app2 internal] load build context
+#71 transferring context: 152.12kB 0.0s done
+#71 DONE 0.3s
+
+#69 [worker internal] load build context
+#69 transferring context: 137.14kB 0.1s done
+#69 DONE 0.2s
+
+#72 [app1] exporting to image
+#72 ...
+
+#73 [worker stage-1 5/6] COPY shared/*.js /shared/
+#73 CACHED
+
+#67 [worker deps 2/4] WORKDIR /app
+#67 CACHED
+
+#74 [worker deps 4/4] RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
+#74 CACHED
+
+#75 [worker stage-1 3/6] COPY --from=deps /app/node_modules ./node_modules
+#75 CACHED
+
+#76 [worker deps 3/4] COPY worker/package.json worker/package-lock.json ./
+#76 CACHED
+
+#77 [worker stage-1 4/6] COPY worker/package.json worker/*.js ./
+#77 CACHED
+
+#78 [worker stage-1 6/6] COPY messaging /messaging
+#78 CACHED
+
+#72 [app1] exporting to image
+#72 exporting layers 0.0s done
+#72 exporting manifest sha256:3aedfddb6b17d123da600a3512dd8ff4557c3c091ab5e34230362c0dc1c98db6
+#72 ...
+
+#79 [app3 internal] load build context
+#79 transferring context: 152.12kB 0.0s done
+#79 DONE 0.5s
+
+#72 [app1] exporting to image
+#72 exporting manifest sha256:3aedfddb6b17d123da600a3512dd8ff4557c3c091ab5e34230362c0dc1c98db6 0.3s done
+#72 exporting config sha256:028814138b6e09c3636b6ce4bf585b68f260d61021f7b3b8e84975b8c4116f3f
+#72 ...
+
+#68 [app3 stage-1 7/7] COPY messaging /messaging
+#68 CACHED
+
+#72 [app1] exporting to image
+#72 exporting config sha256:028814138b6e09c3636b6ce4bf585b68f260d61021f7b3b8e84975b8c4116f3f 0.1s done
+#72 exporting attestation manifest sha256:b7f2944af3258f6a9dcd05fa42493fb7199550e433acff95b36bcd1c412aca5e
+#72 exporting attestation manifest sha256:b7f2944af3258f6a9dcd05fa42493fb7199550e433acff95b36bcd1c412aca5e 0.2s done
+#72 exporting manifest list sha256:234d7080966d7a99b132c3dd77934e6e206e67f0bce9335ae23b0b883f19058c
+#72 ...
+
+#80 [catalog-init] exporting to image
+#80 exporting layers 0.0s done
+#80 exporting manifest sha256:50f0c5bfacb15fc1f2262c31b6f2b35dd936822dcb455a24b949d3c04f05df09 0.1s done
+#80 exporting config sha256:b9bdd0e205ddcc014cb118c9e98c14038c22e6c06788d1e951f217b0ca4576a9 0.2s done
+#80 exporting attestation manifest sha256:1c0af2dfca97cc4bbc8d89ad06fa2e5ed93b229810d1bcefd4f358914507f8d2 0.2s done
+#80 exporting manifest list sha256:632e1228d4212244a76bec777bd6b726af78e08d232392c14aed2c0651438549 0.2s done
+#80 naming to docker.io/library/distributed-three-tier-api:latest 0.1s done
+#80 unpacking to docker.io/library/distributed-three-tier-api:latest 0.2s done
+#80 DONE 1.2s
+
+#81 [application-keepalived-backup] resolving provenance for metadata file
+#81 DONE 0.7s
+
+#72 [app1] exporting to image
+#72 exporting manifest list sha256:234d7080966d7a99b132c3dd77934e6e206e67f0bce9335ae23b0b883f19058c 0.2s done
+#72 naming to docker.io/library/distributed-three-tier-api:latest 0.0s done
+#72 unpacking to docker.io/library/distributed-three-tier-api:latest 0.1s done
+#72 ...
+
+#82 [app2] exporting to image
+#82 exporting layers 0.0s done
+#82 exporting manifest sha256:2516dce0e7574cbb422deca226e761020e9de218bc23c11e8b62ff7777c4ec41 0.3s done
+#82 exporting config sha256:2fe47e826753a93e8aefda2e5d019f4e3c52421b934e9673efa9ee21fd13b8ec 0.1s done
+#82 exporting attestation manifest sha256:4c91571289f87b04256d9d045e360953ef07b171adced72147a164c60eb8d119 0.2s done
+#82 exporting manifest list sha256:d3453837e5c4046be21f51596311efe696906b18320a5dc6155742451d3c3c84 0.2s done
+#82 naming to docker.io/library/distributed-three-tier-api:latest 0.1s done
+#82 unpacking to docker.io/library/distributed-three-tier-api:latest 0.1s done
+#82 DONE 1.3s
+
+#83 [application-keepalived-master] resolving provenance for metadata file
+#83 DONE 1.6s
+
+#72 [app1] exporting to image
+#72 DONE 1.3s
+
+#84 [worker] exporting to image
+#84 exporting layers 0.0s done
+#84 exporting manifest sha256:81308a357a51b7763e288689be9d6410a1e4449477512baf521b896423a2f5f0 0.0s done
+#84 exporting config sha256:0befd52c6f6c2d236f88860a5733391d77e321981be08ef395245e381de10cc2 0.0s done
+#84 exporting attestation manifest sha256:14dbd1552a3ad38c058f1bf7f5b3db655bc412e5019e321409e93979c385ab9f 0.2s done
+#84 exporting manifest list sha256:d976f5b53faf18df427ed42fd57a52bb64cb9e183d3f5137f543fc7366648510 0.2s done
+#84 naming to docker.io/library/distributed-three-tier-worker:latest 0.0s done
+#84 unpacking to docker.io/library/distributed-three-tier-worker:latest 0.1s done
+#84 DONE 1.0s
+
+#85 [app3] exporting to image
+#85 exporting layers 0.0s done
+#85 exporting manifest sha256:0a161a9e645ebc2b5df8c4ccf287b11a0e5642fe39011d592c8bee913e96f653 0.1s done
+#85 exporting config sha256:7f8ea9adc3e2bb0af97386554aa4c90707bc286b0126efaa96417273c3738f09 0.1s done
+#85 exporting attestation manifest sha256:5410216db78cdb34a33da926b6fdcdb5cd59d63878c0ad5b90b9cade7d65cdbe 0.3s done
+#85 exporting manifest list sha256:ae240653f742858004476e422692f607b21afd9788d793c8b865707b841a5165 0.2s done
+#85 naming to docker.io/library/distributed-three-tier-api:latest 0.0s done
+#85 unpacking to docker.io/library/distributed-three-tier-api:latest 0.1s done
+#85 DONE 1.0s
+
+#86 [presentation-keepalived-backup] resolving provenance for metadata file
+#86 DONE 0.3s
+
+#87 [catalog-init] resolving provenance for metadata file
+#87 ...
+
+#88 [worker] resolving provenance for metadata file
+#88 DONE 0.2s
+
+#89 [app1] resolving provenance for metadata file
+#89 ...
+
+#87 [catalog-init] resolving provenance for metadata file
+#87 DONE 0.6s
+
+#90 [app2] resolving provenance for metadata file
+#90 DONE 0.3s
+
+#91 [app3] resolving provenance for metadata file
+#91 DONE 0.1s
+
+#89 [app1] resolving provenance for metadata file
+#89 DONE 0.2s
+ Image distributed-three-tier-api Built 
+ Image distributed-three-tier-api Built 
+ Image distributed-three-tier-api Built 
+ Image distributed-three-tier-presentation-keepalived-backup Built 
+ Image distributed-three-tier-application-keepalived-master Built 
+ Image distributed-three-tier-mongo Built 
+ Image distributed-three-tier-mongo Built 
+ Image distributed-three-tier-mongo Built 
+ Image distributed-three-tier-mongo Built 
+ Image distributed-three-tier-worker Built 
+ Image distributed-three-tier-api Built 
+ Image distributed-three-tier-application-keepalived-backup Built 
+ Image distributed-three-tier-presentation-keepalived-master Built 
+ Network distributed-three-tier_edge Creating 
+ Volume distributed-three-tier_galera3-data Creating 
+ Volume distributed-three-tier_galera2-data Creating 
+ Volume distributed-three-tier_rabbitmq-data Creating 
+ Volume distributed-three-tier_mongodb-data Creating 
+ Volume distributed-three-tier_mongodb3-data Creating 
+ Volume distributed-three-tier_galera1-data Creating 
+ Volume distributed-three-tier_galera2-data Creating 
+ Volume distributed-three-tier_mongodb3-data Creating 
+ Volume distributed-three-tier_galera3-data Creating 
+ Network distributed-three-tier_application Creating 
+ Network distributed-three-tier_edge Creating 
+ Volume distributed-three-tier_mongodb-data Creating 
+ Network distributed-three-tier_database Creating 
+ Volume distributed-three-tier_rabbitmq-data Creating 
+ Volume distributed-three-tier_galera1-data Creating 
+ Network distributed-three-tier_database Creating 
+ Network distributed-three-tier_application Creating 
+ Volume distributed-three-tier_mongodb2-data Creating 
+ Volume distributed-three-tier_mongodb2-data Creating 
+ Volume distributed-three-tier_galera3-data Created 
+ Volume distributed-three-tier_galera3-data Created 
+ Volume distributed-three-tier_mongodb2-data Created 
+ Volume distributed-three-tier_mongodb2-data Created 
+ Volume distributed-three-tier_mongodb3-data Created 
+ Volume distributed-three-tier_mongodb3-data Created 
+ Volume distributed-three-tier_galera2-data Created 
+ Volume distributed-three-tier_galera2-data Created 
+ Volume distributed-three-tier_mongodb-data Created 
+ Volume distributed-three-tier_mongodb-data Created 
+ Volume distributed-three-tier_rabbitmq-data Created 
+ Volume distributed-three-tier_rabbitmq-data Created 
+ Volume distributed-three-tier_galera1-data Created 
+ Volume distributed-three-tier_galera1-data Created 
+ Network distributed-three-tier_edge Created 
+ Network distributed-three-tier_edge Created 
+ Network distributed-three-tier_application Created 
+ Network distributed-three-tier_application Created 
+ Network distributed-three-tier_database Created 
+ Network distributed-three-tier_database Created 
+ Container distributed-three-tier-redis-1 Creating 
+ Container distributed-three-tier-galera1-1 Creating 
+ Container distributed-three-tier-mongodb2-1 Creating 
+ Container distributed-three-tier-mongodb-1 Creating 
+ Container distributed-three-tier-rabbitmq-1 Creating 
+ Container distributed-three-tier-mongodb3-1 Creating 
+ Container distributed-three-tier-galera1-1 Created 
+ Container distributed-three-tier-galera2-1 Creating 
+ Container distributed-three-tier-galera3-1 Creating 
+ Container distributed-three-tier-mongodb2-1 Created 
+ Container distributed-three-tier-mongodb-1 Created 
+ Container distributed-three-tier-mongodb3-1 Created 
+ Container distributed-three-tier-mongo-init-1 Creating 
+ Container distributed-three-tier-redis-1 Created 
+ Container distributed-three-tier-redis2-1 Creating 
+ Container distributed-three-tier-rabbitmq-1 Created 
+ Container distributed-three-tier-galera2-1 Created 
+ Container distributed-three-tier-galera3-1 Created 
+ Container distributed-three-tier-db-lb-1 Creating 
+ Container distributed-three-tier-mongo-init-1 Created 
+ Container distributed-three-tier-redis2-1 Created 
+ Container distributed-three-tier-sentinel1-1 Creating 
+ Container distributed-three-tier-sentinel2-1 Creating 
+ Container distributed-three-tier-sentinel3-1 Creating 
+ Container distributed-three-tier-db-lb-1 Created 
+ Container distributed-three-tier-sentinel2-1 Created 
+ Container distributed-three-tier-sentinel3-1 Created 
+ Container distributed-three-tier-sentinel1-1 Created 
+ Container distributed-three-tier-catalog-init-1 Creating 
+ Container distributed-three-tier-catalog-init-1 Created 
+ Container distributed-three-tier-worker-2 Creating 
+ Container distributed-three-tier-app1-1 Creating 
+ Container distributed-three-tier-app3-1 Creating 
+ Container distributed-three-tier-app2-1 Creating 
+ Container distributed-three-tier-worker-1 Creating 
+ Container distributed-three-tier-worker-2 Created 
+ Container distributed-three-tier-app3-1 Created 
+ Container distributed-three-tier-app1-1 Created 
+ Container distributed-three-tier-app2-1 Created 
+ Container distributed-three-tier-application-lb-master-1 Creating 
+ Container distributed-three-tier-application-lb-backup-1 Creating 
+ Container distributed-three-tier-worker-1 Created 
+ Container distributed-three-tier-application-lb-master-1 Created 
+ Container distributed-three-tier-application-keepalived-master-1 Creating 
+ Container distributed-three-tier-web1-1 Creating 
+ Container distributed-three-tier-web2-1 Creating 
+ Container distributed-three-tier-web3-1 Creating 
+ Container distributed-three-tier-application-lb-backup-1 Created 
+ Container distributed-three-tier-application-keepalived-backup-1 Creating 
+ Container distributed-three-tier-application-keepalived-master-1 Created 
+ Container distributed-three-tier-application-keepalived-backup-1 Created 
+ Container distributed-three-tier-web2-1 Created 
+ Container distributed-three-tier-web3-1 Created 
+ Container distributed-three-tier-web1-1 Created 
+ Container distributed-three-tier-presentation-lb-backup-1 Creating 
+ Container distributed-three-tier-presentation-lb-master-1 Creating 
+ Container distributed-three-tier-presentation-lb-master-1 Created 
+ Container distributed-three-tier-presentation-keepalived-master-1 Creating 
+ Container distributed-three-tier-presentation-lb-backup-1 Created 
+ Container distributed-three-tier-presentation-keepalived-backup-1 Creating 
+ Container distributed-three-tier-presentation-entry-1 Creating 
+ Container distributed-three-tier-presentation-keepalived-backup-1 Created 
+ Container distributed-three-tier-presentation-keepalived-master-1 Created 
+ Container distributed-three-tier-nagios-1 Creating 
+ Container distributed-three-tier-presentation-entry-1 Created 
+ Container distributed-three-tier-nagios-1 Created 
+ Container distributed-three-tier-mongodb3-1 Starting 
+ Container distributed-three-tier-mongodb-1 Starting 
+ Container distributed-three-tier-rabbitmq-1 Starting 
+ Container distributed-three-tier-mongodb2-1 Starting 
+ Container distributed-three-tier-redis-1 Starting 
+ Container distributed-three-tier-galera1-1 Starting 
+ Container distributed-three-tier-mongodb3-1 Started 
+ Container distributed-three-tier-mongodb-1 Started 
+ Container distributed-three-tier-rabbitmq-1 Started 
+ Container distributed-three-tier-mongodb2-1 Started 
+ Container distributed-three-tier-mongodb-1 Waiting 
+ Container distributed-three-tier-mongodb2-1 Waiting 
+ Container distributed-three-tier-mongodb3-1 Waiting 
+ Container distributed-three-tier-redis-1 Started 
+ Container distributed-three-tier-redis-1 Waiting 
+ Container distributed-three-tier-galera1-1 Started 
+ Container distributed-three-tier-galera1-1 Waiting 
+ Container distributed-three-tier-galera1-1 Waiting 
+ Container distributed-three-tier-redis-1 Healthy 
+ Container distributed-three-tier-redis2-1 Starting 
+ Container distributed-three-tier-redis2-1 Started 
+ Container distributed-three-tier-redis2-1 Waiting 
+ Container distributed-three-tier-redis2-1 Waiting 
+ Container distributed-three-tier-redis-1 Waiting 
+ Container distributed-three-tier-redis-1 Waiting 
+ Container distributed-three-tier-redis-1 Waiting 
+ Container distributed-three-tier-redis2-1 Waiting 
+ Container distributed-three-tier-redis-1 Healthy 
+ Container distributed-three-tier-redis-1 Healthy 
+ Container distributed-three-tier-redis-1 Healthy 
+ Container distributed-three-tier-mongodb-1 Healthy 
+ Container distributed-three-tier-mongodb2-1 Healthy 
+ Container distributed-three-tier-galera1-1 Healthy 
+ Container distributed-three-tier-galera3-1 Starting 
+ Container distributed-three-tier-galera1-1 Healthy 
+ Container distributed-three-tier-galera2-1 Starting 
+ Container distributed-three-tier-galera3-1 Started 
+ Container distributed-three-tier-galera2-1 Started 
+ Container distributed-three-tier-db-lb-1 Starting 
+ Container distributed-three-tier-db-lb-1 Started 
+ Container distributed-three-tier-mongodb3-1 Healthy 
+ Container distributed-three-tier-mongo-init-1 Starting 
+ Container distributed-three-tier-mongo-init-1 Started 
+ Container distributed-three-tier-redis2-1 Healthy 
+ Container distributed-three-tier-sentinel2-1 Starting 
+ Container distributed-three-tier-redis2-1 Healthy 
+ Container distributed-three-tier-sentinel3-1 Starting 
+ Container distributed-three-tier-redis2-1 Healthy 
+ Container distributed-three-tier-sentinel1-1 Starting 
+ Container distributed-three-tier-sentinel2-1 Started 
+ Container distributed-three-tier-sentinel3-1 Started 
+ Container distributed-three-tier-sentinel1-1 Started 
+ Container distributed-three-tier-sentinel3-1 Waiting 
+ Container distributed-three-tier-mongo-init-1 Waiting 
+ Container distributed-three-tier-sentinel2-1 Waiting 
+ Container distributed-three-tier-galera1-1 Waiting 
+ Container distributed-three-tier-redis-1 Waiting 
+ Container distributed-three-tier-redis2-1 Waiting 
+ Container distributed-three-tier-sentinel1-1 Waiting 
+ Container distributed-three-tier-redis2-1 Healthy 
+ Container distributed-three-tier-redis-1 Healthy 
+ Container distributed-three-tier-galera1-1 Healthy 
+ Container distributed-three-tier-sentinel2-1 Healthy 
+ Container distributed-three-tier-sentinel3-1 Healthy 
+ Container distributed-three-tier-sentinel1-1 Healthy 
+ Container distributed-three-tier-mongo-init-1 Exited 
+ Container distributed-three-tier-catalog-init-1 Starting 
+ Container distributed-three-tier-catalog-init-1 Started 
+ Container distributed-three-tier-rabbitmq-1 Waiting 
+ Container distributed-three-tier-catalog-init-1 Waiting 
+ Container distributed-three-tier-rabbitmq-1 Waiting 
+ Container distributed-three-tier-catalog-init-1 Waiting 
+ Container distributed-three-tier-catalog-init-1 Waiting 
+ Container distributed-three-tier-rabbitmq-1 Waiting 
+ Container distributed-three-tier-rabbitmq-1 Waiting 
+ Container distributed-three-tier-catalog-init-1 Waiting 
+ Container distributed-three-tier-rabbitmq-1 Healthy 
+ Container distributed-three-tier-rabbitmq-1 Healthy 
+ Container distributed-three-tier-rabbitmq-1 Healthy 
+ Container distributed-three-tier-rabbitmq-1 Healthy 
+ Container distributed-three-tier-catalog-init-1 Exited 
+ Container distributed-three-tier-app1-1 Starting 
+ Container distributed-three-tier-catalog-init-1 Exited 
+ Container distributed-three-tier-app3-1 Starting 
+ Container distributed-three-tier-catalog-init-1 Exited 
+ Container distributed-three-tier-worker-1 Starting 
+ Container distributed-three-tier-catalog-init-1 Exited 
+ Container distributed-three-tier-app2-1 Starting 
+ Container distributed-three-tier-app1-1 Started 
+ Container distributed-three-tier-app3-1 Started 
+ Container distributed-three-tier-worker-1 Started 
+ Container distributed-three-tier-worker-2 Starting 
+ Container distributed-three-tier-worker-2 Started 
+ Container distributed-three-tier-app2-1 Started 
+ Container distributed-three-tier-application-lb-master-1 Starting 
+ Container distributed-three-tier-application-lb-backup-1 Starting 
+ Container distributed-three-tier-application-lb-master-1 Started 
+ Container distributed-three-tier-application-keepalived-master-1 Starting 
+ Container distributed-three-tier-web3-1 Starting 
+ Container distributed-three-tier-web2-1 Starting 
+ Container distributed-three-tier-web1-1 Starting 
+ Container distributed-three-tier-application-lb-backup-1 Started 
+ Container distributed-three-tier-application-keepalived-backup-1 Starting 
+ Container distributed-three-tier-application-keepalived-backup-1 Started 
+ Container distributed-three-tier-application-keepalived-master-1 Started 
+ Container distributed-three-tier-web3-1 Started 
+ Container distributed-three-tier-web2-1 Started 
+ Container distributed-three-tier-web1-1 Started 
+ Container distributed-three-tier-presentation-lb-backup-1 Starting 
+ Container distributed-three-tier-presentation-lb-master-1 Starting 
+ Container distributed-three-tier-presentation-lb-backup-1 Started 
+ Container distributed-three-tier-presentation-keepalived-backup-1 Starting 
+ Container distributed-three-tier-presentation-lb-master-1 Started 
+ Container distributed-three-tier-presentation-keepalived-master-1 Starting 
+ Container distributed-three-tier-presentation-entry-1 Starting 
+ Container distributed-three-tier-presentation-keepalived-master-1 Started 
+ Container distributed-three-tier-presentation-keepalived-backup-1 Started 
+ Container distributed-three-tier-nagios-1 Starting 
+ Container distributed-three-tier-presentation-entry-1 Started 
+ Container distributed-three-tier-nagios-1 Started 
+Esperando a que la tienda responda...
+Tienda lista (intento 1)
+
+=== Contenedores que NO están Up ===
+SERVICE                          STATUS
+catalog-init                     Exited (0) 20 seconds ago
+mongo-init                       Exited (0) 25 seconds ago
+
+=== Galera ===
+Variable_name	Value
+wsrep_cluster_size	3
+
+Tienda:  http://localhost/
+Nagios:  http://localhost:8088/  (usuario nagiosadmin)
+Contraseña de Nagios: [omitida]

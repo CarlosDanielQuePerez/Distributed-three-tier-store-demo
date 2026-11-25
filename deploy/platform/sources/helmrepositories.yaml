@@ -1,0 +1,45 @@
+# Repositorios Helm que usa la plataforma. Flux los consulta cada hora.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata: { name: mariadb-operator, namespace: flux-system }
+spec: { interval: 1h, url: https://helm.mariadb.com/mariadb-operator }
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata: { name: mongodb, namespace: flux-system }
+spec: { interval: 1h, url: https://mongodb.github.io/helm-charts }
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata: { name: ot-container-kit, namespace: flux-system }
+spec: { interval: 1h, url: https://ot-container-kit.github.io/helm-charts }
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata: { name: metallb, namespace: flux-system }
+spec: { interval: 1h, url: https://metallb.github.io/metallb }
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata: { name: jetstack, namespace: flux-system }
+spec: { interval: 1h, url: https://charts.jetstack.io }
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata: { name: kyverno, namespace: flux-system }
+spec: { interval: 1h, url: https://kyverno.github.io/kyverno/ }
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata: { name: kedacore, namespace: flux-system }
+spec: { interval: 1h, url: https://kedacore.github.io/charts }
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata: { name: chaos-mesh, namespace: flux-system }
+spec: { interval: 1h, url: https://charts.chaos-mesh.org }
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata: { name: grafana, namespace: flux-system }
+spec: { interval: 1h, url: https://grafana.github.io/helm-charts }

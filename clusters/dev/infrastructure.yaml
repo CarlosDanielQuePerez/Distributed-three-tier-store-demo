@@ -1,0 +1,144 @@
+# Flux: orden de reconciliación del entorno dev (Fase 5, "dependency ordering").
+#   sources → operators → platform-config → secrets → data → queues → apps → observability
+# Cada Kustomization espera a que la anterior esté Ready (wait/healthChecks), así que un
+# clúster vacío se levanta completo en el orden correcto con un solo "flux bootstrap".
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: { name: platform-sources, namespace: flux-system }
+spec:
+  interval: 1h
+  path: ./deploy/platform/sources
+  prune: true
+  sourceRef: { kind: GitRepository, name: flux-system }
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: { name: platform-operators, namespace: flux-system }
+spec:
+  dependsOn: [{ name: platform-sources }]
+  interval: 30m
+  retryInterval: 1m
+  timeout: 15m
+  path: ./deploy/platform/operators
+  prune: true
+  wait: true
+  sourceRef: { kind: GitRepository, name: flux-system }
+  # dev corre en WSL + Tailscale (sin L2 compartida): servicelb de K3s en lugar de MetalLB.
+  patches:
+    - patch: |
+        $patch: delete
+        apiVersion: helm.toolkit.fluxcd.io/v2
+        kind: HelmRelease
+        metadata: { name: metallb, namespace: flux-system }
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: { name: platform-config, namespace: flux-system }
+spec:
+  dependsOn: [{ name: platform-operators }]
+  interval: 30m
+  retryInterval: 1m
+  path: ./deploy/platform/config
+  prune: true
+  sourceRef: { kind: GitRepository, name: flux-system }
+  patches:
+    - patch: |
+        $patch: delete
+        apiVersion: metallb.io/v1beta1
+        kind: IPAddressPool
+        metadata: { name: store-pool, namespace: metallb-system }
+    - patch: |
+        $patch: delete
+        apiVersion: metallb.io/v1beta1
+        kind: L2Advertisement
+        metadata: { name: store-l2, namespace: metallb-system }
+    - target: { kind: HelmChartConfig, name: traefik }
+      patch: |
+        - op: replace
+          path: /spec/valuesContent
+          value: |-
+            logs:
+              access:
+                enabled: true
+                format: json
+            tracing:
+              otlp:
+                enabled: true
+                grpc:
+                  enabled: true
+                  endpoint: otel-agent.observability.svc.cluster.local:4317
+                  insecure: true
+---
+# Secrets cifrados con SOPS/age (Fase 5, "secrets"). Flux los descifra con flux-system/sops-age.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: { name: secrets, namespace: flux-system }
+spec:
+  dependsOn: [{ name: platform-operators }]
+  interval: 30m
+  path: ./deploy/secrets/dev
+  prune: true
+  sourceRef: { kind: GitRepository, name: flux-system }
+  decryption:
+    provider: sops
+    secretRef: { name: sops-age }
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: { name: data, namespace: flux-system }
+spec:
+  dependsOn: [{ name: platform-config }, { name: secrets }]
+  interval: 30m
+  retryInterval: 1m
+  timeout: 20m
+  path: ./deploy/data
+  prune: false # nunca borrar bases de datos por un cambio en Git
+  wait: true
+  sourceRef: { kind: GitRepository, name: flux-system }
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: { name: queues, namespace: flux-system }
+spec:
+  dependsOn: [{ name: data }]
+  interval: 30m
+  retryInterval: 1m
+  timeout: 15m
+  path: ./deploy/queues
+  prune: false
+  wait: true
+  sourceRef: { kind: GitRepository, name: flux-system }
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: { name: observability, namespace: flux-system }
+spec:
+  # OPCIONAL (paso 5 del "Suggested order" del plan): OTel + LGTM consume mucha RAM,
+  # así que queda suspendida por defecto. Para encenderla:
+  #   flux resume kustomization observability      (o cambiar a "suspend: false" en Git)
+  # Para apagarla y liberar la memoria:
+  #   flux suspend kustomization observability && kubectl delete namespace observability
+  suspend: true
+  dependsOn: [{ name: platform-config }, { name: secrets }]
+  interval: 30m
+  retryInterval: 1m
+  timeout: 15m
+  path: ./deploy/platform/observability/dev
+  prune: true
+  sourceRef: { kind: GitRepository, name: flux-system }
+  patches:
+    - target: { kind: DaemonSet, name: otel-agent }
+      patch: |
+        - op: replace
+          path: /spec/template/spec/containers/0/env/2/value
+          value: store-dev
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: { name: security, namespace: flux-system }
+spec:
+  dependsOn: [{ name: platform-operators }]
+  interval: 30m
+  path: ./deploy/platform/wazuh
+  prune: true
+  sourceRef: { kind: GitRepository, name: flux-system }

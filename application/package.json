@@ -1,14 +1,28 @@
 {
   "name": "store-catalog-api",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "start": "node index.js"
+    "start": "node --import ./telemetry.js index.js",
+    "migrate": "node init-db.js",
+    "test": "node --test test/"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.83.1",
+    "@opentelemetry/instrumentation": "^0.301.0",
+    "amqplib": "^0.10.9",
     "mongodb": "^6.17.0",
     "mysql2": "^3.14.1",
     "redis": "^5.5.6"
+  },
+  "overrides": {
+    "rimraf": "^6.1.4",
+    "glob": "^14.0.6",
+    "minimatch": "^11.0.9"
   }
 }

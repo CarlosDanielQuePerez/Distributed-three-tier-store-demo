@@ -1,0 +1,19 @@
+# VIP en bare metal (reemplaza Keepalived). El rango se sobrescribe por entorno en
+# clusters/<env>/infrastructure.yaml; debe ser un rango libre de la LAN de los nodos.
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: store-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 192.168.1.240-192.168.1.250
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: store-l2
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - store-pool

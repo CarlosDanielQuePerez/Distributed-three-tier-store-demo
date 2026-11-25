@@ -1,0 +1,131 @@
+# MariaDB Galera (3 nodos, multi-primario síncrono) + MaxScale como proxy consciente del
+# clúster: readwritesplit manda escrituras al primario y lecturas a las réplicas, y hace
+# failover. Reemplaza al HAProxy db-lb de Compose (ToDo, punto 3).
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: MariaDB
+metadata:
+  name: store-mariadb
+spec:
+  rootPasswordSecretKeyRef: { name: mariadb-credentials, key: root-password }
+  replicas: 3
+  galera:
+    enabled: true
+  maxScaleRef:
+    name: store-maxscale
+  storage:
+    size: 2Gi
+  # Antiafinidad "preferida" (no obligatoria): con 3 nodos queda una réplica por nodo;
+  # con 2 computadoras (equipo de 2) queda 2 + 1 en lugar de dejar una réplica sin programar.
+  affinity:
+    antiAffinityEnabled: false
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/instance: store-mariadb
+  podDisruptionBudget:
+    maxUnavailable: 1
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { memory: 1Gi }
+  myCnf: |
+    [mariadb]
+    bind-address=*
+    default_storage_engine=InnoDB
+    binlog_format=row
+    innodb_autoinc_lock_mode=2
+    max_connections=300
+    innodb_buffer_pool_size=128M
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: MaxScale
+metadata:
+  name: store-maxscale
+spec:
+  replicas: 2
+  mariaDbRef:
+    name: store-mariadb
+  services:
+    - name: rw-router
+      router: readwritesplit
+      listener:
+        port: 3306
+  monitor:
+    interval: 2s
+    cooperativeMonitoring: majority_of_all
+    params:
+      disable_master_failback: "false"
+      available_when_donor: "false"
+  admin:
+    port: 8989
+    guiEnabled: false
+  auth:
+    generate: true
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { memory: 512Mi }
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Database
+metadata:
+  name: store
+spec:
+  mariaDbRef: { name: store-mariadb }
+  characterSet: utf8mb4
+  collate: utf8mb4_general_ci
+  cleanupPolicy: Skip
+---
+# Usuario de la aplicación: solo SELECT/UPDATE (lee el catálogo, cambia precios).
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: User
+metadata:
+  name: store-app
+spec:
+  name: store_app
+  mariaDbRef: { name: store-mariadb }
+  passwordSecretKeyRef: { name: mariadb-credentials, key: app-password }
+  maxUserConnections: 150
+  host: "%"
+  cleanupPolicy: Delete
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Grant
+metadata:
+  name: store-app
+spec:
+  mariaDbRef: { name: store-mariadb }
+  privileges: ["SELECT", "UPDATE"]
+  database: store
+  table: "*"
+  username: store_app
+  host: "%"
+  cleanupPolicy: Delete
+---
+# Usuario de migraciones (Job store-init): DDL sobre la base store únicamente.
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: User
+metadata:
+  name: store-migrator
+spec:
+  name: store_migrator
+  mariaDbRef: { name: store-mariadb }
+  passwordSecretKeyRef: { name: mariadb-credentials, key: migration-password }
+  maxUserConnections: 5
+  host: "%"
+  cleanupPolicy: Delete
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Grant
+metadata:
+  name: store-migrator
+spec:
+  mariaDbRef: { name: store-mariadb }
+  privileges: ["ALL PRIVILEGES"]
+  database: store
+  table: "*"
+  username: store_migrator
+  host: "%"
+  cleanupPolicy: Delete

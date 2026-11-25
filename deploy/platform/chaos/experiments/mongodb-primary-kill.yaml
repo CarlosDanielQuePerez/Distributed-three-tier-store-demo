@@ -1,0 +1,9 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata: { name: mongodb-pod-kill, namespace: chaos-mesh }
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces: [store-data]
+    labelSelectors: { app: store-mongodb-svc }

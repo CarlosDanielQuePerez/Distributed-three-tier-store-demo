@@ -1,0 +1,8 @@
+# Configuración que necesita los CRDs instalados por "operators".
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - metallb-pool.yaml
+  - cert-manager-issuers.yaml
+  - kyverno-policies.yaml
+  - traefik.yaml

@@ -1,0 +1,58 @@
+# store-data: se niega todo el tráfico de entrada salvo:
+#  - entre pods del mismo namespace (replicación Galera/Mongo/Redis/RabbitMQ, respaldos)
+#  - desde la capa de aplicación de "store" (API, worker, job de migración)
+#  - desde los operadores, KEDA y la observabilidad
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-same-namespace
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-application-tier
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: store }
+          podSelector:
+            matchExpressions:
+              - { key: store.tier, operator: In, values: [application, init] }
+      ports:
+        - { port: 3306, protocol: TCP }   # MaxScale
+        - { port: 27017, protocol: TCP }  # MongoDB
+        - { port: 6379, protocol: TCP }   # Redis
+        - { port: 26379, protocol: TCP }  # Sentinel
+        - { port: 5672, protocol: TCP }   # RabbitMQ AMQP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-platform
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [mariadb-operator, mongodb-operator, redis-operator, rabbitmq-system, keda, observability, chaos-mesh]

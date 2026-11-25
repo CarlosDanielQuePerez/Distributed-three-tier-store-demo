@@ -1,0 +1,34 @@
+SERVICE                          STATUS
+app1                             Up About a minute (healthy)
+app2                             Up About a minute (healthy)
+app3                             Up About a minute (healthy)
+application-keepalived-backup    Up About a minute
+application-keepalived-master    Up About a minute
+application-lb-backup            Up About a minute
+application-lb-master            Up About a minute
+catalog-init                     Exited (0) About a minute ago
+db-lb                            Up About a minute
+galera1                          Up About a minute (healthy)
+galera2                          Up About a minute (healthy)
+galera3                          Up About a minute (healthy)
+mongo-init                       Exited (0) About a minute ago
+mongodb                          Up About a minute (healthy)
+mongodb2                         Up About a minute (healthy)
+mongodb3                         Up About a minute (healthy)
+nagios                           Up 53 seconds
+presentation-entry               Up 54 seconds
+presentation-keepalived-backup   Up 54 seconds
+presentation-keepalived-master   Up 55 seconds
+presentation-lb-backup           Up 56 seconds
+presentation-lb-master           Up 55 seconds
+rabbitmq                         Up About a minute (healthy)
+redis                            Up About a minute (healthy)
+redis2                           Up About a minute (healthy)
+sentinel1                        Up About a minute (healthy)
+sentinel2                        Up About a minute (healthy)
+sentinel3                        Up About a minute (healthy)
+web1                             Up 57 seconds
+web2                             Up 59 seconds
+web3                             Up About a minute
+worker                           Up About a minute (healthy)
+worker                           Up About a minute (healthy)

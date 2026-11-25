@@ -1,0 +1,44 @@
++ ab -t 90 -n 10000000 -c 20 -s 10 http://store-web.store.svc.cluster.local/api/products/cheapest
+This is ApacheBench, Version 2.3 <$Revision: 1913912 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking store-web.store.svc.cluster.local (be patient)
+
+
+Server Software:        nginx
+Server Hostname:        store-web.store.svc.cluster.local
+Server Port:            80
+
+Document Path:          /api/products/cheapest
+Document Length:        Variable
+
+Concurrency Level:      20
+Time taken for tests:   90.402 seconds
+Complete requests:      38860
+Failed requests:        0
+Total transferred:      54831460 bytes
+HTML transferred:       45194180 bytes
+Requests per second:    429.86 [#/sec] (mean)
+Time per request:       46.527 [ms] (mean)
+Time per request:       2.326 [ms] (mean, across all concurrent requests)
+Transfer rate:          592.31 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    2  25.0      1    3234
+Processing:     2   43 267.0     18   10541
+Waiting:        2   40 255.2     16    9256
+Total:          2   45 271.0     20   10543
+
+Percentage of the requests served within a certain time (ms)
+  50%     20
+  66%     29
+  75%     36
+  80%     42
+  90%     59
+  95%     80
+  98%    130
+  99%    283
+ 100%  10543 (longest request)
+Finished 38860 requests

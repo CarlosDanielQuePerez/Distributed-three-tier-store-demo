@@ -1,0 +1,28 @@
+# Capa de presentación y aplicación (namespace store). Las imágenes y el host del
+# Ingress se fijan en deploy/overlays/<env>.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: store
+labels:
+  - pairs: { app.kubernetes.io/part-of: store }
+    includeSelectors: false
+resources:
+  - serviceaccounts.yaml
+  - configmap.yaml
+  - api.yaml
+  - web.yaml
+  - worker.yaml
+  - init-job.yaml
+  - autoscaling.yaml
+  - ingress.yaml
+  - networkpolicies.yaml
+images:
+  - name: store-api
+    newName: ghcr.io/carlosdanielqueperez/store-api
+    newTag: dev
+  - name: store-web
+    newName: ghcr.io/carlosdanielqueperez/store-web
+    newTag: dev
+  - name: store-worker
+    newName: ghcr.io/carlosdanielqueperez/store-worker
+    newTag: dev

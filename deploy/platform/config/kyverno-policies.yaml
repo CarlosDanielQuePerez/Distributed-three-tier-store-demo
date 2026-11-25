@@ -1,0 +1,79 @@
+# Políticas de admisión (Fase 7). En dev quedan en Audit (se reportan, no bloquean);
+# clusters/prod las cambia a Enforce con un patch.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-store-images
+  annotations:
+    policies.kyverno.io/title: Verificar firma cosign de las imágenes de la tienda
+    policies.kyverno.io/description: >-
+      Las imágenes ghcr.io/<owner>/store-* deben estar firmadas sin llave (keyless) por el
+      workflow release.yml de este repositorio en GitHub Actions.
+spec:
+  webhookTimeoutSeconds: 30
+  background: false
+  rules:
+    - name: verify-cosign-keyless
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [store]
+      verifyImages:
+        - failureAction: Audit
+          imageReferences:
+            - "ghcr.io/carlosdanielqueperez/store-*"
+          mutateDigest: false
+          attestors:
+            - entries:
+                - keyless:
+                    issuer: https://token.actions.githubusercontent.com
+                    subjectRegExp: "^https://github.com/CarlosDanielQuePerez/Distributed-three-tier-store-demo/\\.github/workflows/release\\.yml@refs/.*$"
+                    rekor:
+                      url: https://rekor.sigstore.dev
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: store-workload-hygiene
+  annotations:
+    policies.kyverno.io/title: Buenas prácticas de los workloads de la tienda
+spec:
+  background: true
+  rules:
+    - name: disallow-latest-tag
+      match:
+        any:
+          - resources: { kinds: [Pod], namespaces: [store, store-data] }
+      validate:
+        failureAction: Audit
+        message: "Usa una etiqueta de imagen inmutable (sha-<commit> o semver), no :latest."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"
+    - name: require-requests-limits
+      match:
+        any:
+          - resources: { kinds: [Pod], namespaces: [store] }
+      validate:
+        failureAction: Audit
+        message: "Todos los contenedores deben declarar requests de CPU/memoria y límite de memoria."
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  requests: { cpu: "?*", memory: "?*" }
+                  limits: { memory: "?*" }
+    - name: require-read-only-root
+      match:
+        any:
+          - resources: { kinds: [Pod], namespaces: [store] }
+      validate:
+        failureAction: Audit
+        message: "El sistema de archivos raíz debe ser de solo lectura."
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  readOnlyRootFilesystem: true

@@ -1,0 +1,13 @@
+# Copiar a terraform.tfvars (no se versiona).
+# Equipo de 2 computadoras con Windows + WSL: los nodos se unen por Tailscale
+# (cada WSL está detrás del NAT de Windows; Windows 10 no tiene red "mirrored").
+# Las direcciones son las IP 100.x.y.z que muestra `tailscale ip -4` en cada WSL
+# (scripts/wsl-node-setup.sh las imprime al final).
+overlay = "tailscale"
+nodes = [
+  { name = "k3s-node1", address = "100.64.0.1", ssh_user = "shadowlink", role = "server" }, # tu computadora
+  { name = "k3s-node2", address = "100.64.0.2", ssh_user = "gael", role = "agent" },        # computadora de Gael
+]
+ssh_private_key_path = "~/.ssh/id_ed25519"
+lan_cidr             = "100.64.0.0/10" # rango de Tailscale
+metallb_range        = ""              # sin MetalLB: servicelb publica el Ingress en cada nodo

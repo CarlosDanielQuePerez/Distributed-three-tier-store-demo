@@ -1,0 +1,81 @@
+Apagando Galera en orden (galera3 y galera2 primero)...
+ Container distributed-three-tier-galera3-1 Stopping 
+ Container distributed-three-tier-galera2-1 Stopping 
+ Container distributed-three-tier-galera2-1 Stopped 
+ Container distributed-three-tier-galera3-1 Stopped 
+Apagando el resto (galera1 queda de último)...
+ Container distributed-three-tier-worker-2 Stopping 
+ Container distributed-three-tier-nagios-1 Stopping 
+ Container distributed-three-tier-presentation-entry-1 Stopping 
+ Container distributed-three-tier-worker-1 Stopping 
+ Container distributed-three-tier-worker-1 Stopped 
+ Container distributed-three-tier-worker-2 Stopped 
+ Container distributed-three-tier-presentation-entry-1 Stopped 
+ Container distributed-three-tier-nagios-1 Stopped 
+ Container distributed-three-tier-presentation-keepalived-master-1 Stopping 
+ Container distributed-three-tier-application-keepalived-master-1 Stopping 
+ Container distributed-three-tier-application-keepalived-backup-1 Stopping 
+ Container distributed-three-tier-presentation-keepalived-backup-1 Stopping 
+ Container distributed-three-tier-application-keepalived-master-1 Stopped 
+ Container distributed-three-tier-presentation-keepalived-master-1 Stopped 
+ Container distributed-three-tier-presentation-keepalived-backup-1 Stopped 
+ Container distributed-three-tier-presentation-lb-master-1 Stopping 
+ Container distributed-three-tier-presentation-lb-backup-1 Stopping 
+ Container distributed-three-tier-application-keepalived-backup-1 Stopped 
+ Container distributed-three-tier-application-lb-backup-1 Stopping 
+ Container distributed-three-tier-application-lb-backup-1 Stopped 
+ Container distributed-three-tier-presentation-lb-master-1 Stopped 
+ Container distributed-three-tier-presentation-lb-backup-1 Stopped 
+ Container distributed-three-tier-web3-1 Stopping 
+ Container distributed-three-tier-web1-1 Stopping 
+ Container distributed-three-tier-web2-1 Stopping 
+ Container distributed-three-tier-web3-1 Stopped 
+ Container distributed-three-tier-web1-1 Stopped 
+ Container distributed-three-tier-web2-1 Stopped 
+ Container distributed-three-tier-application-lb-master-1 Stopping 
+ Container distributed-three-tier-application-lb-master-1 Stopped 
+ Container distributed-three-tier-app3-1 Stopping 
+ Container distributed-three-tier-app2-1 Stopping 
+ Container distributed-three-tier-app1-1 Stopping 
+ Container distributed-three-tier-app2-1 Stopped 
+ Container distributed-three-tier-app1-1 Stopped 
+ Container distributed-three-tier-app3-1 Stopped 
+ Container distributed-three-tier-rabbitmq-1 Stopping 
+ Container distributed-three-tier-catalog-init-1 Stopping 
+ Container distributed-three-tier-catalog-init-1 Stopped 
+ Container distributed-three-tier-sentinel2-1 Stopping 
+ Container distributed-three-tier-db-lb-1 Stopping 
+ Container distributed-three-tier-mongo-init-1 Stopping 
+ Container distributed-three-tier-sentinel3-1 Stopping 
+ Container distributed-three-tier-sentinel1-1 Stopping 
+ Container distributed-three-tier-mongo-init-1 Stopped 
+ Container distributed-three-tier-mongodb3-1 Stopping 
+ Container distributed-three-tier-mongodb-1 Stopping 
+ Container distributed-three-tier-mongodb2-1 Stopping 
+ Container distributed-three-tier-sentinel3-1 Stopped 
+ Container distributed-three-tier-sentinel1-1 Stopped 
+ Container distributed-three-tier-sentinel2-1 Stopped 
+ Container distributed-three-tier-redis2-1 Stopping 
+ Container distributed-three-tier-redis2-1 Stopped 
+ Container distributed-three-tier-redis-1 Stopping 
+ Container distributed-three-tier-redis-1 Stopped 
+ Container distributed-three-tier-rabbitmq-1 Stopped 
+ Container distributed-three-tier-db-lb-1 Stopped 
+ Container distributed-three-tier-galera3-1 Stopping 
+ Container distributed-three-tier-galera2-1 Stopping 
+ Container distributed-three-tier-galera3-1 Stopped 
+ Container distributed-three-tier-galera2-1 Stopped 
+ Container distributed-three-tier-galera1-1 Stopping 
+ Container distributed-three-tier-galera1-1 Stopped 
+ Container distributed-three-tier-mongodb2-1 Stopped 
+ Container distributed-three-tier-mongodb-1 Stopped 
+ Container distributed-three-tier-mongodb3-1 Stopped 
+
+=== Contenedores que siguen encendidos (debe salir vacío) ===
+
+=== Estado guardado de Galera (galera1 debería decir safe_to_bootstrap:1) ===
+galera1: safe_to_bootstrap: 1
+galera2: safe_to_bootstrap: 0
+galera3: safe_to_bootstrap: 0
+
+Listo. Ya puedes cerrar Docker Desktop o apagar la computadora.

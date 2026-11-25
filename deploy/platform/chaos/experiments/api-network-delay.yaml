@@ -1,0 +1,17 @@
+# 200 ms de latencia entre la API y la capa de datos durante 2 minutos (prueba el SLO de latencia).
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata: { name: api-network-delay, namespace: chaos-mesh }
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces: [store]
+    labelSelectors: { app.kubernetes.io/name: store-api }
+  delay: { latency: 200ms, jitter: 20ms, correlation: "25" }
+  direction: to
+  target:
+    mode: all
+    selector:
+      namespaces: [store-data]
+  duration: 120s

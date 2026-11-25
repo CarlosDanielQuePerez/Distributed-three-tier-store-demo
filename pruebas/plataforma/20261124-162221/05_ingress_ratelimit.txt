@@ -1,0 +1,55 @@
++ ab -n 3000 -c 50 -H Host: store.local http://traefik.kube-system.svc.cluster.local/api/products/cheapest
+This is ApacheBench, Version 2.3 <$Revision: 1913912 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking traefik.kube-system.svc.cluster.local (be patient)
+Completed 300 requests
+Completed 600 requests
+Completed 900 requests
+Completed 1200 requests
+Completed 1500 requests
+Completed 1800 requests
+Completed 2100 requests
+Completed 2400 requests
+Completed 2700 requests
+Completed 3000 requests
+Finished 3000 requests
+
+
+Server Software:        
+Server Hostname:        traefik.kube-system.svc.cluster.local
+Server Port:            80
+
+Document Path:          /api/products/cheapest
+Document Length:        Variable
+
+Concurrency Level:      50
+Time taken for tests:   3.906 seconds
+Complete requests:      3000
+Failed requests:        0
+Non-2xx responses:      2453
+Total transferred:      1182216 bytes
+HTML transferred:       677862 bytes
+Requests per second:    767.95 [#/sec] (mean)
+Time per request:       65.108 [ms] (mean)
+Time per request:       1.302 [ms] (mean, across all concurrent requests)
+Transfer rate:          295.54 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    9   6.7      7      39
+Processing:     2   48  55.7     31     486
+Waiting:        2   39  47.4     24     445
+Total:          2   57  56.7     40     514
+
+Percentage of the requests served within a certain time (ms)
+  50%     40
+  66%     53
+  75%     64
+  80%     73
+  90%    105
+  95%    146
+  98%    206
+  99%    409
+ 100%    514 (longest request)

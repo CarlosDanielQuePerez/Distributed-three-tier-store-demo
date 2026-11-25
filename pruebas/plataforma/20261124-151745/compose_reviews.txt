@@ -1,0 +1,56 @@
+This is ApacheBench, Version 2.3 <$Revision: 1913912 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking presentation-entry (be patient)
+Completed 500 requests
+Completed 1000 requests
+Completed 1500 requests
+Completed 2000 requests
+Completed 2500 requests
+Completed 3000 requests
+Completed 3500 requests
+Completed 4000 requests
+Completed 4500 requests
+Completed 5000 requests
+Finished 5000 requests
+
+
+Server Software:        nginx/1.31.7
+Server Hostname:        presentation-entry
+Server Port:            80
+
+Document Path:          /api/products/ST-001/reviews
+Document Length:        Variable
+
+Concurrency Level:      50
+Time taken for tests:   15.576 seconds
+Complete requests:      5000
+Failed requests:        0
+Total transferred:      2150000 bytes
+Total body sent:        1195000
+HTML transferred:       460000 bytes
+Requests per second:    321.01 [#/sec] (mean)
+Time per request:       155.760 [ms] (mean)
+Time per request:       3.115 [ms] (mean, across all concurrent requests)
+Transfer rate:          134.80 [Kbytes/sec] received
+                        74.92 kb/s sent
+                        209.72 kb/s total
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    2   4.3      1      62
+Processing:    40  152  60.3    139     521
+Waiting:       40  150  59.9    137     518
+Total:         43  154  61.0    141     539
+
+Percentage of the requests served within a certain time (ms)
+  50%    141
+  66%    166
+  75%    184
+  80%    196
+  90%    232
+  95%    271
+  98%    314
+  99%    349
+ 100%    539 (longest request)

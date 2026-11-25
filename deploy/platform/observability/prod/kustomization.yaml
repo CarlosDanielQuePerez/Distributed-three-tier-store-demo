@@ -1,0 +1,12 @@
+# prod: LGTM por separado (Loki, Tempo, Mimir, Grafana) gestionado por Flux con Helm, y
+# un OTel Collector gateway (Deployment, 2 réplicas) entre los agentes y los backends.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: observability
+resources:
+  - ../base
+  - otel-gateway.yaml
+  - lgtm-helmreleases.yaml
+  - mimir-rules-loader.yaml
+  - ../dashboards
+  - ../alerts

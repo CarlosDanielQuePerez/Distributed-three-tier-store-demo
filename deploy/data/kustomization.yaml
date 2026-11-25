@@ -1,0 +1,10 @@
+# Capa de datos en store-data, gestionada por operadores (Fase 2).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: store-data
+resources:
+  - mariadb.yaml
+  - mongodb.yaml
+  - redis.yaml
+  - backups.yaml
+  - networkpolicies.yaml

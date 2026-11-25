@@ -1,0 +1,72 @@
+# Plantilla procesada por envsubst al arrancar (docker-entrypoint.d de la imagen oficial).
+# Variables: API_UPSTREAM, OTEL_EXPORTER_OTLP_GRPC_ENDPOINT, OTEL_EXPORTER_OTLP_HTTP_ENDPOINT,
+#            OTEL_SERVICE_NAME, GRAFANA_URL
+
+otel_exporter {
+    endpoint ${OTEL_EXPORTER_OTLP_GRPC_ENDPOINT};
+}
+otel_service_name ${OTEL_SERVICE_NAME};
+otel_trace on;
+# Continúa el traceparent del navegador (o inicia uno) y lo propaga a la API.
+otel_trace_context propagate;
+
+upstream store_api {
+    server ${API_UPSTREAM};
+    keepalive 32;
+}
+
+server {
+    listen 8080;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # El HTML es el mismo para todos los pods; se muestra qué pod respondió.
+    sub_filter "Website node 1" "Website pod $hostname";
+    sub_filter_once off;
+
+    location = /healthz {
+        access_log off;
+        otel_trace off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    location = /config.js {
+        otel_trace off;
+        default_type application/javascript;
+        add_header Cache-Control "no-store";
+        return 200 'window.STORE_CONFIG = { grafanaUrl: "${GRAFANA_URL}", browserTracing: true };\n';
+    }
+
+    # Spans del navegador (OTLP/HTTP JSON) → colector, mismo origen y sin CORS.
+    # Se resuelve en cada petición (variable + resolver) y no al arrancar: la
+    # observabilidad es opcional y, si no está instalada, Nginx debe iniciar igual
+    # (esta ruta responde 502 y el navegador descarta el span).
+    location = /otel/v1/traces {
+        otel_trace off;
+        limit_except POST { deny all; }
+        client_max_body_size 64k;
+        resolver ${NGINX_LOCAL_RESOLVERS} valid=30s ipv6=off;
+        set $otel_collector "${OTEL_EXPORTER_OTLP_HTTP_ENDPOINT}";
+        proxy_pass $otel_collector/v1/traces;
+    }
+
+    location /api/ {
+        proxy_pass http://store_api/;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+        proxy_set_header X-Web-Node $hostname;
+        proxy_connect_timeout 3s;
+        proxy_read_timeout 15s;
+        proxy_next_upstream error timeout http_502 http_503;
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}

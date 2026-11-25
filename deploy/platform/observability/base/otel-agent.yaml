@@ -1,0 +1,167 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: otel-agent }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: otel-agent }
+rules:
+  - apiGroups: [""]
+    resources: [pods, namespaces, nodes, nodes/stats, nodes/proxy]
+    verbs: [get, list, watch]
+  - apiGroups: [apps]
+    resources: [replicasets, deployments, statefulsets, daemonsets]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: otel-agent }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: otel-agent }
+subjects:
+  - { kind: ServiceAccount, name: otel-agent, namespace: observability }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: otel-agent-config }
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc: { endpoint: 0.0.0.0:4317 }
+          http: { endpoint: 0.0.0.0:4318 }
+      filelog:
+        include:
+          - /var/log/pods/store_*/*/*.log
+          - /var/log/pods/store-data_*/*/*.log
+          - /var/log/pods/kube-system_traefik-*/*/*.log
+        start_at: end
+        include_file_path: true
+        operators:
+          - type: container
+            id: container-parser
+      kubeletstats:
+        collection_interval: 30s
+        auth_type: serviceAccount
+        endpoint: https://${env:K8S_NODE_IP}:10250
+        insecure_skip_verify: true
+        metric_groups: [node, pod, container]
+      hostmetrics:
+        root_path: /hostfs
+        collection_interval: 30s
+        scrapers:
+          cpu: {}
+          memory: {}
+          load: {}
+          filesystem: {}
+          network: {}
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: 80
+        spike_limit_percentage: 25
+      k8sattributes:
+        auth_type: serviceAccount
+        filter:
+          node_from_env_var: K8S_NODE_NAME
+        extract:
+          metadata: [k8s.namespace.name, k8s.pod.name, k8s.pod.uid, k8s.deployment.name, k8s.statefulset.name, k8s.node.name]
+        pod_association:
+          - sources: [{ from: resource_attribute, name: k8s.pod.uid }]
+          - sources: [{ from: resource_attribute, name: k8s.pod.ip }]
+          - sources: [{ from: connection }]
+      resource/cluster:
+        attributes:
+          - { key: k8s.cluster.name, value: "${env:CLUSTER_NAME}", action: upsert }
+      batch:
+        timeout: 5s
+    exporters:
+      otlp:
+        endpoint: otel-gateway.observability.svc.cluster.local:4317
+        tls: { insecure: true }
+        sending_queue: { enabled: true, queue_size: 5000 }
+        retry_on_failure: { enabled: true }
+    extensions:
+      health_check: { endpoint: 0.0.0.0:13133 }
+    service:
+      extensions: [health_check]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, k8sattributes, resource/cluster, batch]
+          exporters: [otlp]
+        metrics:
+          receivers: [otlp, kubeletstats, hostmetrics]
+          processors: [memory_limiter, k8sattributes, resource/cluster, batch]
+          exporters: [otlp]
+        logs:
+          receivers: [otlp, filelog]
+          processors: [memory_limiter, k8sattributes, resource/cluster, batch]
+          exporters: [otlp]
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: otel-agent
+  labels: { app.kubernetes.io/name: otel-agent }
+spec:
+  selector:
+    matchLabels: { app.kubernetes.io/name: otel-agent }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: otel-agent }
+    spec:
+      serviceAccountName: otel-agent
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: collector
+          image: otel/opentelemetry-collector-contrib:0.140.0
+          args: ["--config=/conf/config.yaml"]
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom: { fieldRef: { fieldPath: spec.nodeName } }
+            - name: K8S_NODE_IP
+              valueFrom: { fieldRef: { fieldPath: status.hostIP } }
+            - name: CLUSTER_NAME
+              value: store
+            - name: GOMEMLIMIT
+              value: 200MiB
+          ports:
+            - { name: otlp-grpc, containerPort: 4317 }
+            - { name: otlp-http, containerPort: 4318 }
+          readinessProbe:
+            httpGet: { path: /, port: 13133 }
+          livenessProbe:
+            httpGet: { path: /, port: 13133 }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 256Mi }
+          # Necesita leer /var/log/pods (root:root 0640) y el sistema de archivos del host.
+          securityContext:
+            runAsUser: 0
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL], add: [DAC_READ_SEARCH] }
+          volumeMounts:
+            - { name: config, mountPath: /conf }
+            - { name: varlogpods, mountPath: /var/log/pods, readOnly: true }
+            - { name: hostfs, mountPath: /hostfs, readOnly: true, mountPropagation: HostToContainer }
+      volumes:
+        - name: config
+          configMap: { name: otel-agent-config }
+        - name: varlogpods
+          hostPath: { path: /var/log/pods }
+        - name: hostfs
+          hostPath: { path: / }
+---
+# internalTrafficPolicy: Local → cada pod envía al agente de SU nodo.
+apiVersion: v1
+kind: Service
+metadata: { name: otel-agent }
+spec:
+  selector: { app.kubernetes.io/name: otel-agent }
+  internalTrafficPolicy: Local
+  ports:
+    - { name: otlp-grpc, port: 4317, targetPort: otlp-grpc }
+    - { name: otlp-http, port: 4318, targetPort: otlp-http }

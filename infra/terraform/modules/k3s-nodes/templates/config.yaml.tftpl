@@ -1,0 +1,51 @@
+# /etc/rancher/k3s/config.yaml generado por Terraform (módulo k3s-nodes)
+%{ if agent ~}
+# Rol: agent (solo cargas de trabajo)
+server: https://${join_address}:6443
+token: "${token}"
+node-name: ${node_name}
+node-ip: ${node_ip}
+%{ if flannel_if != "" ~}
+flannel-iface: ${flannel_if}
+%{ endif ~}
+kubelet-arg:
+  - max-pods=150
+%{ else ~}
+%{ if bootstrap ~}
+cluster-init: true
+%{ else ~}
+server: https://${join_address}:6443
+%{ endif ~}
+token: "${token}"
+node-name: ${node_name}
+node-ip: ${node_ip}
+%{ if flannel_if != "" ~}
+# Tráfico entre nodos por la VPN (los nodos en WSL están detrás de NAT).
+flannel-iface: ${flannel_if}
+advertise-address: ${node_ip}
+%{ endif ~}
+write-kubeconfig-mode: "0600"
+tls-san:
+%{ for san in tls_sans ~}
+  - ${san}
+%{ endfor ~}
+%{ if no_slb ~}
+# MetalLB sustituye al balanceador integrado (servicelb).
+disable:
+  - servicelb
+%{ endif ~}
+# Cifrado en reposo de los Secrets en etcd.
+secrets-encryption: true
+%{ for key, value in extra_args ~}
+${key}: ${value}
+%{ endfor ~}
+# Auditoría de la API (Wazuh la lee desde el nodo).
+kube-apiserver-arg:
+  - audit-log-path=/var/lib/rancher/k3s/server/logs/audit.log
+  - audit-policy-file=/etc/rancher/k3s/audit-policy.yaml
+  - audit-log-maxage=7
+  - audit-log-maxbackup=5
+  - audit-log-maxsize=100
+kubelet-arg:
+  - max-pods=150
+%{ endif ~}

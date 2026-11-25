@@ -1,0 +1,13 @@
+Carga: ab -t 240 -c 10 contra /api/products/cheapest desde k3d-store-server-0
+17:54:41 docker stop k3d-store-agent-0
+17:57:28 docker start k3d-store-agent-0
+17:57:51 k3d-store-agent-0 Ready de nuevo en 21s
+GET /api/products/cheapest (ab)        completadas=14241   fallidas=29    no2xx=305    rps=59.16     p50=16ms p95=93ms p99=3002ms max=135159ms
+Sonda por endpoint (respuestas no-200 / total):
+  products/cheapest        13 / 41
+  products/ST-001/reviews  13 / 41
+  readyz                   13 / 41
+17:54:41 docker stop k3d-store-agent-0
+17:57:28 docker start k3d-store-agent-0
+17:57:51 k3d-store-agent-0 Ready de nuevo en 21s
+Error from server (Timeout): Timeout: request did not complete within requested timeout - context deadline exceeded

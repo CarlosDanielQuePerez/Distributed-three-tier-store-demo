@@ -1,0 +1,109 @@
+# Fase 4 — Release en main y en tags vX.Y.Z:
+#  - build + push a GHCR (GITHUB_TOKEN efímero, sin credenciales de larga duración)
+#  - SBOM (SPDX) y provenance; firma keyless con cosign (OIDC de GitHub)
+#  - main → etiquetas main-<run>-<sha> que Flux Image Automation lleva a dev
+#  - tag  → etiqueta semver y PR hacia la rama "release" (puerta de promoción a prod)
+name: release
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - "deploy/overlays/dev/**"
+
+permissions:
+  contents: read
+
+jobs:
+  images:
+    name: Publicar ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write # OIDC para cosign keyless
+    strategy:
+      matrix:
+        include:
+          - { image: store-api, dockerfile: application/Dockerfile }
+          - { image: store-worker, dockerfile: worker/Dockerfile }
+          - { image: store-web, dockerfile: web/Dockerfile }
+    steps:
+      - uses: actions/checkout@v4
+      - id: vars
+        run: |
+          echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+          echo "short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ steps.vars.outputs.owner }}/${{ matrix.image }}
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=main-${{ github.run_number }}-${{ steps.vars.outputs.short }},enable=${{ github.ref == 'refs/heads/main' }}
+            # Etiqueta móvil para clústeres dev sin Image Automation (scripts/local-cluster.sh gitops).
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/main' }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: APP_VERSION=${{ steps.meta.outputs.version }}
+          sbom: true
+          provenance: mode=max
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+      - uses: sigstore/cosign-installer@v3
+      - uses: anchore/sbom-action@v0
+        with:
+          image: ghcr.io/${{ steps.vars.outputs.owner }}/${{ matrix.image }}@${{ steps.build.outputs.digest }}
+          format: spdx-json
+          output-file: sbom.spdx.json
+          upload-artifact: true
+      - name: Firmar imagen y adjuntar SBOM (keyless)
+        env:
+          IMAGE: ghcr.io/${{ steps.vars.outputs.owner }}/${{ matrix.image }}@${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "$IMAGE"
+          cosign attest --yes --type spdxjson --predicate sbom.spdx.json "$IMAGE"
+
+  promote-prod:
+    name: PR de promoción a prod
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release
+      - name: Fijar la versión en deploy/overlays/prod
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          git fetch origin "$GITHUB_SHA" && git checkout "$GITHUB_SHA" -- . ':!deploy/overlays/dev'
+          sed -i -E "s/^(\s+newTag: ).*/\1${version}/" deploy/overlays/prod/kustomization.yaml
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          base: release
+          branch: promote/${{ github.ref_name }}
+          title: "Promover ${{ github.ref_name }} a prod"
+          commit-message: "chore(prod): promover ${{ github.ref_name }}"
+          body: |
+            Promueve las imágenes `${{ github.ref_name }}` (firmadas con cosign) al entorno prod.
+            Al aprobar y fusionar este PR, Flux reconcilia el clúster prod desde la rama `release`.

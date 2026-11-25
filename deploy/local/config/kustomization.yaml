@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../platform/config
+patches:
+  - patch: |
+      $patch: delete
+      apiVersion: metallb.io/v1beta1
+      kind: IPAddressPool
+      metadata: { name: store-pool, namespace: metallb-system }
+  - patch: |
+      $patch: delete
+      apiVersion: metallb.io/v1beta1
+      kind: L2Advertisement
+      metadata: { name: store-l2, namespace: metallb-system }
+  - patch: |
+      $patch: delete
+      apiVersion: kyverno.io/v1
+      kind: ClusterPolicy
+      metadata: { name: verify-store-images }
+  - target: { kind: HelmChartConfig, name: traefik }
+    patch: |
+      - op: replace
+        path: /spec/valuesContent
+        value: |-
+          logs:
+            access:
+              enabled: true
+              format: json
+          tracing:
+            otlp:
+              enabled: true
+              grpc:
+                enabled: true
+                endpoint: otel-agent.observability.svc.cluster.local:4317
+                insecure: true

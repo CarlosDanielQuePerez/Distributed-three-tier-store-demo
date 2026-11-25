@@ -1,0 +1,30 @@
+# Pod generador de carga dentro del clúster (ApacheBench, mismo que pruebas/ anteriores).
+# Cumple Pod Security "restricted" y tiene la etiqueta que las NetworkPolicies permiten.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: loadgen
+  namespace: store
+  labels: { store.role: load-generator, app.kubernetes.io/name: loadgen }
+spec:
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    seccompProfile: { type: RuntimeDefault }
+  containers:
+    - name: ab
+      image: httpd:2.4.62-alpine
+      command: ["sleep", "86400"]
+      resources:
+        requests: { cpu: 500m, memory: 64Mi }
+        limits: { cpu: "2", memory: 256Mi }
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities: { drop: [ALL] }
+      volumeMounts: [{ name: tmp, mountPath: /tmp }]
+  volumes:
+    - name: tmp
+      emptyDir: {}

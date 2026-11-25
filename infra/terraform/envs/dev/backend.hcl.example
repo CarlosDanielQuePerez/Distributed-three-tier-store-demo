@@ -1,0 +1,11 @@
+bucket                      = "store-terraform-state"
+key                         = "k3s/dev/terraform.tfstate"
+region                      = "us-east-1"
+endpoints                   = { s3 = "http://192.168.1.10:9000" } # MinIO de la LAN
+use_path_style              = true
+use_lockfile                = true
+skip_credentials_validation = true
+skip_region_validation      = true
+skip_requesting_account_id  = true
+skip_metadata_api_check     = true
+# Credenciales: variables de entorno AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY

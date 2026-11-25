@@ -1,0 +1,37 @@
+GET /api/products/cheapest (ab)        completadas=14241   fallidas=29    no2xx=305    rps=59.16     p50=16ms p95=93ms p99=3002ms max=135159ms
+Sonda por endpoint (respuestas no-200 / total):
+  products/cheapest        13 / 41
+  products/ST-001/reviews  13 / 41
+  readyz                   13 / 41
+17:54:41 docker stop k3d-store-agent-0
+17:57:28 docker start k3d-store-agent-0
+17:57:51 k3d-store-agent-0 Ready de nuevo en 21s
+
+Línea de tiempo de la sonda (hora del pod en UTC = local + 5 h; código 0 = sin respuesta en 3 s):
+  54:14 products/cheapest          200
+  54:15 products/cheapest          200
+  54:16 products/cheapest          200
+  54:18 products/cheapest          200
+  54:46 products/cheapest          200
+  54:47 products/cheapest          200
+  54:48 products/cheapest          200
+  54:55 products/cheapest          0
+  55:11 products/cheapest          0
+  55:27 products/cheapest          0
+  55:43 products/cheapest          0
+  55:59 products/cheapest          0
+  57:19 products/cheapest          0
+  57:35 products/cheapest          0
+  57:51 products/cheapest          0
+  58:09 products/cheapest          0
+
+Estado de los nodos:
+### antes (17:54:08)
+  k3d-store-agent-0 Ready
+  k3d-store-server-0 Ready
+### nodo apagado +60s (17:55:57)
+  k3d-store-agent-0 NotReady
+  k3d-store-server-0 Ready
+### después (+30s de Ready) (17:58:58)
+  k3d-store-agent-0 Ready
+  k3d-store-server-0 Ready

@@ -1,0 +1,47 @@
+# Ingress de Traefik (K3s) con TLS de cert-manager, límite de peticiones por IP y
+# cabeceras de seguridad. Reemplaza HAProxy + Keepalived de la capa de presentación.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata: { name: rate-limit }
+spec:
+  rateLimit:
+    average: 100
+    burst: 200
+    period: 1s
+    sourceCriterion:
+      ipStrategy: { depth: 0 }
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata: { name: security-headers }
+spec:
+  headers:
+    frameDeny: true
+    contentTypeNosniff: true
+    browserXssFilter: true
+    referrerPolicy: same-origin
+    stsSeconds: 31536000
+    customResponseHeaders:
+      Server: ""
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: store
+  annotations:
+    cert-manager.io/cluster-issuer: store-ca
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.middlewares: store-rate-limit@kubernetescrd,store-security-headers@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [store.local]
+      secretName: store-tls
+  rules:
+    - host: store.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: store-web, port: { name: http } }

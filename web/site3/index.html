@@ -14,7 +14,8 @@
       <option value="/products/cheapest">GET /products/cheapest — cheapest products</option>
       <option value="/products/ST-001/reviews">GET /products/ST-001/reviews — product reviews</option>
       <option value="/">GET / — API information</option>
-      <option value="/health">GET /health — service health</option>
+      <option value="/readyz">GET /readyz — readiness (MariaDB, MongoDB, Redis, RabbitMQ)</option>
+      <option value="/healthz">GET /healthz — liveness</option>
     </select>
     <button id="query-api" type="button">Query endpoint</button>
     <button id="clear-cache" type="button">Clear Redis catalog cache</button>
@@ -22,9 +23,21 @@
     <ol id="api-trace" class="pipeline" aria-label="API explorer request pipeline"></ol>
     <pre id="api-result" aria-live="polite"></pre>
   </section>
+  <section aria-labelledby="review-form-title">
+    <h2 id="review-form-title">Write a review (queued through RabbitMQ)</h2>
+    <form id="review-form">
+      <label>Product <input name="sku" value="ST-001" pattern="[A-Za-z0-9-]{1,32}" required></label>
+      <label>Name <input name="reviewer" maxlength="80" required></label>
+      <label>Rating <input name="rating" type="number" min="1" max="5" value="5" required></label>
+      <label>Comment <input name="comment" maxlength="1000" required></label>
+      <button type="submit">Send review</button>
+    </form>
+    <p id="review-form-status" role="status"></p>
+    <ol id="review-form-trace" class="pipeline" aria-label="Review submission trace"></ol>
+  </section>
   <section aria-labelledby="request-flow-title">
     <h2 id="request-flow-title">Live request traces</h2>
-    <p>Each pipeline shows the components used by its API request.</p>
+    <p>Each request carries a W3C <code>traceparent</code>; the trace ID links to the distributed trace in Grafana Tempo. The hop list appears only when the API sends the legacy <code>X-Request-Trace</code> header (Docker Compose).</p>
     <h3>Cheapest products</h3>
     <ol id="products-trace" class="pipeline" aria-label="Cheapest products request pipeline"></ol>
     <h3>Product reviews (ST-001)</h3>
@@ -36,6 +49,7 @@
   <h2>Recent product reviews</h2>
   <p id="reviews-status">Loading reviews...</p>
   <ul id="reviews"></ul>
+  <script src="/config.js"></script>
   <script src="/catalog.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,74 @@
+{
+  "$comment": "Fuente única de verdad de la topología de RabbitMQ. La API y el worker la declaran (idempotente) al conectarse. Cambiar los argumentos de una cola existente requiere borrarla primero (RabbitMQ rechaza redeclaraciones distintas).",
+  "version": 1,
+  "exchanges": [
+    { "name": "store.events", "type": "topic", "durable": true },
+    { "name": "store.retry", "type": "direct", "durable": true },
+    { "name": "store.dlx", "type": "direct", "durable": true }
+  ],
+  "queues": [
+    {
+      "name": "reviews.created",
+      "arguments": {
+        "x-queue-type": "quorum",
+        "x-dead-letter-exchange": "store.dlx",
+        "x-dead-letter-routing-key": "reviews.dlq",
+        "x-delivery-limit": 10
+      }
+    },
+    {
+      "name": "reviews.retry.1s",
+      "arguments": {
+        "x-queue-type": "quorum",
+        "x-message-ttl": 1000,
+        "x-dead-letter-exchange": "store.events",
+        "x-dead-letter-routing-key": "reviews.created"
+      }
+    },
+    {
+      "name": "reviews.retry.5s",
+      "arguments": {
+        "x-queue-type": "quorum",
+        "x-message-ttl": 5000,
+        "x-dead-letter-exchange": "store.events",
+        "x-dead-letter-routing-key": "reviews.created"
+      }
+    },
+    {
+      "name": "reviews.retry.30s",
+      "arguments": {
+        "x-queue-type": "quorum",
+        "x-message-ttl": 30000,
+        "x-dead-letter-exchange": "store.events",
+        "x-dead-letter-routing-key": "reviews.created"
+      }
+    },
+    { "name": "reviews.dlq", "arguments": { "x-queue-type": "quorum" } },
+    { "name": "catalog.invalidate", "arguments": { "x-queue-type": "quorum" } },
+    {
+      "name": "catalog.refresh",
+      "arguments": {
+        "x-queue-type": "quorum",
+        "x-single-active-consumer": true,
+        "x-max-length": 10
+      }
+    }
+  ],
+  "bindings": [
+    { "exchange": "store.events", "routingKey": "reviews.created", "queue": "reviews.created" },
+    { "exchange": "store.retry", "routingKey": "reviews.retry.1s", "queue": "reviews.retry.1s" },
+    { "exchange": "store.retry", "routingKey": "reviews.retry.5s", "queue": "reviews.retry.5s" },
+    { "exchange": "store.retry", "routingKey": "reviews.retry.30s", "queue": "reviews.retry.30s" },
+    { "exchange": "store.dlx", "routingKey": "reviews.dlq", "queue": "reviews.dlq" },
+    { "exchange": "store.events", "routingKey": "catalog.changed", "queue": "catalog.invalidate" },
+    { "exchange": "store.events", "routingKey": "catalog.refresh", "queue": "catalog.refresh" }
+  ],
+  "retry": {
+    "reviews.created": {
+      "exchange": "store.retry",
+      "tiers": ["reviews.retry.1s", "reviews.retry.5s", "reviews.retry.30s"],
+      "deadLetter": { "exchange": "store.dlx", "routingKey": "reviews.dlq" }
+    }
+  },
+  "monitoredQueues": ["reviews.created", "reviews.dlq", "catalog.invalidate", "catalog.refresh"]
+}

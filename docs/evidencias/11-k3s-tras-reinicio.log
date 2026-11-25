@@ -1,0 +1,26 @@
+$ kubectl get nodes
+NAME                STATUS  ROLES
+k3d-store-agent-0   Ready   <none>
+k3d-store-server-0  Ready   control-plane,master
+
+$ kubectl -n store get pods
+POD                             READY   NODE
+store-api-75d49c8945-gpggl      true    k3d-store-agent-0
+store-api-75d49c8945-gpsdq      true    k3d-store-agent-0
+store-api-75d49c8945-skbxt      true    k3d-store-server-0
+store-web-6f86df8684-ds74x      true    k3d-store-agent-0
+store-web-6f86df8684-qgbs8      true    k3d-store-agent-0
+store-worker-7bd66dd548-f6qhg   true    k3d-store-agent-0
+store-worker-7bd66dd548-mmwrb   true    k3d-store-server-0
+
+$ estado de la capa de datos tras el reinicio completo
+mariadb.k8s.mariadb.com/store-mariadb True Running
+mongodbcommunity.mongodbcommunity.mongodb.com/store-mongodb Running 7.0.14
+rabbitmqcluster.rabbitmq.com/store-rabbitmq True True
+
+$ curl readyz por Traefik
+{"status":"ok","checks":{"mariadb":"ok","mongodb":"ok","redis":"ok","rabbitmq":"ok"}}
+
+$ POST reseña tras el reinicio (MongoDB con la conexión corregida)
+{"status":"accepted","idempotencyKey":"reinicio-0001","sku":"ST-005"}  HTTP 202
+   Reinicio - Guardada después de apagar y encender el clúster

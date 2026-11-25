@@ -1,0 +1,44 @@
+# Migraciones de MariaDB + índices de MongoDB. Flux lo vuelve a crear cuando cambia la
+# imagen (los Jobs son inmutables); las migraciones son idempotentes.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: store-init
+  annotations:
+    kustomize.toolkit.fluxcd.io/force: enabled
+spec:
+  backoffLimit: 20
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: store-init, store.tier: init }
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: store-api
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: migrate
+          image: store-api
+          command: ["node", "init-db.js"]
+          envFrom:
+            - configMapRef: { name: store-config }
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: ""
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: store-app-secrets, key: DB_PASSWORD } }
+            - name: DB_MIGRATION_PASSWORD
+              valueFrom: { secretKeyRef: { name: store-app-secrets, key: DB_MIGRATION_PASSWORD } }
+            - name: MONGO_PASSWORD
+              valueFrom: { secretKeyRef: { name: store-app-secrets, key: MONGO_PASSWORD } }
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }

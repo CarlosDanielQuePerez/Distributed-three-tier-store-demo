@@ -1,0 +1,15 @@
+# Aplicación (web, API, worker). Depende de que datos y colas estén listos.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: { name: apps, namespace: flux-system }
+spec:
+  # No depende de "observability" porque es opcional: sin ella las apps funcionan igual
+  # y el SDK de OpenTelemetry descarta la telemetría que no puede enviar.
+  dependsOn: [{ name: queues }]
+  interval: 10m
+  retryInterval: 1m
+  timeout: 10m
+  path: ./deploy/overlays/prod
+  prune: true
+  wait: true
+  sourceRef: { kind: GitRepository, name: flux-system }

@@ -1,0 +1,5 @@
+# Los experimentos NO se aplican automáticamente: se lanzan a mano durante las pruebas
+# (pruebas/plataforma/run-chaos.sh) para medir el impacto frente a los SLOs.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources: []

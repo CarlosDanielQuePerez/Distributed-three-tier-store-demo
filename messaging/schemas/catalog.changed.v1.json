@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "store/catalog.changed/v1",
+  "title": "catalog.changed v1",
+  "description": "Publicado por la API cuando cambia el catálogo en MariaDB. El worker borra las llaves store:products:* y pide un catalog.refresh.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "version", "occurredAt", "data"],
+  "properties": {
+    "type": { "const": "catalog.changed" },
+    "version": { "const": 1 },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sku", "change"],
+      "properties": {
+        "sku": { "type": "string", "pattern": "^[A-Za-z0-9-]{1,32}$" },
+        "change": { "enum": ["price"] },
+        "price": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

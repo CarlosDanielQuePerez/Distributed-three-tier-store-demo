@@ -1,0 +1,13 @@
+# Autoescalado del worker por profundidad de la cola reviews.created (Fase 3, KEDA).
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - scaledobject.yaml
+patches:
+  - target: { kind: HorizontalPodAutoscaler, name: store-worker }
+    patch: |
+      $patch: delete
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: store-worker

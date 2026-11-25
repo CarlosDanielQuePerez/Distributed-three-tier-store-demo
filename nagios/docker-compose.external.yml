@@ -1,0 +1,21 @@
+# Nagios externo al clúster K3s. Ejecutar en una máquina de la LAN que NO sea nodo:
+#   K3S_NODE1_IP=... K3S_NODE2_IP=... K3S_NODE3_IP=... K3S_INGRESS_IP=... \
+#     docker compose -f nagios/docker-compose.external.yml up -d
+# http://localhost:8089/nagios  (nagiosadmin / NAGIOSADMIN_PASSWORD)
+name: store-nagios-external
+services:
+  nagios:
+    image: jasonrivers/nagios:latest
+    ports:
+      - "8089:80"
+    environment:
+      NAGIOSADMIN_USER: nagiosadmin
+      NAGIOSADMIN_PASS: ${NAGIOSADMIN_PASSWORD:?Set NAGIOSADMIN_PASSWORD}
+    volumes:
+      - ./external-k3s.cfg:/opt/nagios/etc/objects/localhost.cfg:ro
+    extra_hosts:
+      - "k3s-node1:${K3S_NODE1_IP:?Set K3S_NODE1_IP}"
+      - "k3s-node2:${K3S_NODE2_IP:?Set K3S_NODE2_IP}"
+      - "k3s-node3:${K3S_NODE3_IP:?Set K3S_NODE3_IP}"
+      - "store-ingress:${K3S_INGRESS_IP:?Set K3S_INGRESS_IP}"
+    restart: unless-stopped

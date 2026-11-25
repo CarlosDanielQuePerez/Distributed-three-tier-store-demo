@@ -1,0 +1,115 @@
+# Respaldos (Fase 8). Restauración: docs/runbooks/backup-restore.md
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: store-backups
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 5Gi } }
+---
+# MariaDB: respaldo lógico diario con retención de 7 días (operador).
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Backup
+metadata:
+  name: store-mariadb-daily
+spec:
+  mariaDbRef: { name: store-mariadb }
+  schedule:
+    cron: "0 3 * * *"
+    suspend: false
+  timeZone: "America/Cancun"
+  maxRetention: 168h
+  compression: gzip
+  storage:
+    persistentVolumeClaim:
+      accessModes: ["ReadWriteOnce"]
+      resources: { requests: { storage: 2Gi } }
+  args: ["--single-transaction", "--databases", "store"]
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { memory: 512Mi }
+---
+# MongoDB: mongodump diario de store_reviews al PVC compartido de respaldos.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: store-mongodb-backup
+spec:
+  schedule: "15 3 * * *"
+  timeZone: "America/Cancun"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels: { app.kubernetes.io/name: store-backup }
+        spec:
+          restartPolicy: OnFailure
+          securityContext: { runAsNonRoot: true, runAsUser: 999, fsGroup: 999, seccompProfile: { type: RuntimeDefault } }
+          containers:
+            - name: mongodump
+              image: mongo:7.0.14
+              env:
+                - name: MONGO_ADMIN_PASSWORD
+                  valueFrom: { secretKeyRef: { name: mongodb-users, key: admin-password } }
+              command: ["/bin/sh", "-c"]
+              args:
+                - >-
+                  set -e; dest=/backups/mongodb/$(date +%Y%m%d-%H%M%S); mkdir -p "$dest";
+                  mongodump --uri "mongodb://store-admin:${MONGO_ADMIN_PASSWORD}@store-mongodb-svc.store-data.svc.cluster.local:27017/?replicaSet=store-mongodb&authSource=admin&readPreference=secondaryPreferred"
+                  --db store_reviews --gzip --out "$dest";
+                  find /backups/mongodb -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf {} +;
+                  echo "backup written to $dest"
+              resources:
+                requests: { cpu: 50m, memory: 64Mi }
+                limits: { memory: 256Mi }
+              securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }
+              volumeMounts: [{ name: backups, mountPath: /backups }]
+          volumes:
+            - name: backups
+              persistentVolumeClaim: { claimName: store-backups }
+---
+# RabbitMQ: exporta las definiciones (exchanges, colas, bindings, políticas, usuarios).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: store-rabbitmq-definitions-backup
+spec:
+  schedule: "30 3 * * *"
+  timeZone: "America/Cancun"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels: { app.kubernetes.io/name: store-backup }
+        spec:
+          restartPolicy: OnFailure
+          securityContext: { runAsNonRoot: true, runAsUser: 100, fsGroup: 101, seccompProfile: { type: RuntimeDefault } }
+          containers:
+            - name: export
+              image: curlimages/curl:8.11.1
+              env:
+                - name: RABBITMQ_USER
+                  valueFrom: { secretKeyRef: { name: rabbitmq-credentials, key: username } }
+                - name: RABBITMQ_PASSWORD
+                  valueFrom: { secretKeyRef: { name: rabbitmq-credentials, key: password } }
+              command: ["/bin/sh", "-c"]
+              args:
+                - >-
+                  set -e; mkdir -p /backups/rabbitmq;
+                  out=/backups/rabbitmq/definitions-$(date +%Y%m%d-%H%M%S).json;
+                  curl -fsS -u "$RABBITMQ_USER:$RABBITMQ_PASSWORD" http://store-rabbitmq.store-data.svc.cluster.local:15672/api/definitions -o "$out";
+                  find /backups/rabbitmq -name 'definitions-*.json' -mtime +14 -delete; echo "exported $out"
+              resources:
+                requests: { cpu: 10m, memory: 16Mi }
+                limits: { memory: 64Mi }
+              securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }
+              volumeMounts: [{ name: backups, mountPath: /backups }]
+          volumes:
+            - name: backups
+              persistentVolumeClaim: { claimName: store-backups }

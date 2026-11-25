@@ -13,7 +13,8 @@ GRUPOS = [
         "application-keepalived-master", "application-keepalived-backup", "app1", "app2", "app3"]),
     ("Capa de datos", ["db-lb", "galera1", "galera2", "galera3", "mongodb", "mongodb2", "mongodb3",
         "redis", "redis2", "sentinel1", "sentinel2", "sentinel3"]),
-    ("Monitoreo y arranque", ["nagios", "catalog-init", "mongo-init"]),
+    ("Colas y worker", ["rabbitmq", "worker"]),
+    ("Monitoreo y arranque", ["nagios", "catalog-init", "mongo-init", "otel-lgtm"]),
 ]
 COLORES = {"verde": "#1f9d55", "amarillo": "#d69e2e", "rojo": "#e53e3e", "gris": "#718096"}
 

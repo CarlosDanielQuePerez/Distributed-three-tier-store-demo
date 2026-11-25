@@ -1,0 +1,6 @@
+Plataforma K3s — 2026-11-24T16:22:29-05:00  contexto=k3d-store  n=20000 c=50
+  nodo k3d-store-agent-0 Ready v1.33.5+k3s1
+  nodo k3d-store-server-0 Ready v1.33.5+k3s1
+  deploy store-api 3/3
+  deploy store-web 2/2
+  deploy store-worker 2/2

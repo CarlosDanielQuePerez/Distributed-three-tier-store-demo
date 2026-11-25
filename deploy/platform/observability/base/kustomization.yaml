@@ -1,0 +1,8 @@
+# OTel Collector como agente (DaemonSet, uno por nodo). Recibe OTLP de los pods del
+# nodo, lee los logs de los contenedores, métricas de kubelet y del host, agrega
+# atributos de Kubernetes (k8sattributes) y reenvía todo al gateway "otel-gateway".
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: observability
+resources:
+  - otel-agent.yaml

@@ -26,3 +26,30 @@ backups/
 
 
 *.bak*
+
+# Dependencias de Node.js
+node_modules/
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+**/terraform.tfvars
+!**/terraform.tfvars.example
+kubeconfig*
+
+# Claves de SOPS/age (nunca se versionan)
+*.agekey
+age.key
+
+# Resultados crudos temporales de pruebas
+pruebas/plataforma/**/raw/
+
+# Secrets de Flux: la carpeta se versiona, pero solo con archivos cifrados por SOPS
+# (scripts/generate-secrets.sh). Cualquier otro archivo dentro sigue ignorado.
+!deploy/secrets/
+deploy/secrets/*/*
+!deploy/secrets/*/kustomization.yaml
+!deploy/secrets/*/*.sops.yaml

@@ -1,0 +1,57 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: store-api }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: store-api }
+  minReplicas: 3
+  maxReplicas: 9
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }
+  behavior:
+    scaleDown: { stabilizationWindowSeconds: 120 }
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: store-web }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: store-web }
+  minReplicas: 3
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }
+---
+# En prod el worker escala por profundidad de cola con KEDA (components/keda-worker),
+# que reemplaza a este HPA.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: store-worker }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: store-worker }
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: store-api }
+spec:
+  minAvailable: 2
+  selector: { matchLabels: { app.kubernetes.io/name: store-api } }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: store-web }
+spec:
+  minAvailable: 2
+  selector: { matchLabels: { app.kubernetes.io/name: store-web } }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: store-worker }
+spec:
+  minAvailable: 1
+  selector: { matchLabels: { app.kubernetes.io/name: store-worker } }

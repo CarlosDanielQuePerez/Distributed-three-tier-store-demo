@@ -181,35 +181,48 @@ services:
         condition: service_started
 
   app1:
-    build: ./application
+    build: &application-build
+      context: .
+      dockerfile: application/Dockerfile
+    image: distributed-three-tier-api
     environment: &application-environment
       DB_HOST: db-lb
       DB_PORT: 3306
       DB_NAME: ${CATALOG_DB_NAME:?Set CATALOG_DB_NAME in .env}
       DB_USER: ${CATALOG_DB_USER:?Set CATALOG_DB_USER in .env}
       DB_PASSWORD: ${CATALOG_DB_PASSWORD:?Set CATALOG_DB_PASSWORD in .env}
-      MONGO_HOST: mongodb
-      MONGO_PORT: 27017
       MONGO_HOSTS: mongodb:27017,mongodb2:27017,mongodb3:27017
       MONGO_REPLICA_SET: rs0
       MONGO_DB: ${MONGO_DB_NAME:?Set MONGO_DB_NAME in .env}
-      MONGO_USER: ${MONGO_ROOT_USERNAME:?Set MONGO_ROOT_USERNAME in .env}
-      MONGO_PASSWORD: ${MONGO_ROOT_PASSWORD:?Set MONGO_ROOT_PASSWORD in .env}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      # Usuario de aplicación con readWrite solo sobre la base de reseñas (lo crea catalog-init).
+      MONGO_USER: ${MONGO_APP_USERNAME:?Set MONGO_APP_USERNAME in .env}
+      MONGO_PASSWORD: ${MONGO_APP_PASSWORD:?Set MONGO_APP_PASSWORD in .env}
+      MONGO_AUTH_SOURCE: ${MONGO_DB_NAME:?Set MONGO_DB_NAME in .env}
       REDIS_SENTINELS: sentinel1:26379,sentinel2:26379,sentinel3:26379
       REDIS_MASTER_NAME: mymaster
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:?Set RABBITMQ_USER in .env}:${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in .env}@rabbitmq:5672
+      API_ADMIN_TOKEN: ${API_ADMIN_TOKEN:-}
+      LEGACY_TRACE_HEADER: "true"
+      # Vacío = sin telemetría. Con el perfil "observability": http://otel-lgtm:4318
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_SERVICE_NAME: store-api
+      OTEL_RESOURCE_ATTRIBUTES: deployment.environment.name=compose
+      OTEL_METRIC_EXPORT_INTERVAL: "15000"
+      OTEL_LOGS_EXPORTER: none
       APPLICATION_NODE: app1
     restart: unless-stopped
     depends_on:
       catalog-init:
         condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
     networks:
       - application
       - database
 
   app2:
-    build: ./application
+    build: *application-build
+    image: distributed-three-tier-api
     environment:
       <<: *application-environment
       APPLICATION_NODE: app2
@@ -217,12 +230,15 @@ services:
     depends_on:
       catalog-init:
         condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
     networks:
       - application
       - database
 
   app3:
-    build: ./application
+    build: *application-build
+    image: distributed-three-tier-api
     environment:
       <<: *application-environment
       APPLICATION_NODE: app3
@@ -230,16 +246,25 @@ services:
     depends_on:
       catalog-init:
         condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
     networks:
       - application
       - database
 
   catalog-init:
-    build: ./application
+    build: *application-build
+    image: distributed-three-tier-api
     command: ["node", "init-db.js"]
-    environment: *application-environment
-    volumes:
-      - ./database/catalog.sql:/app/database/catalog.sql:ro
+    environment:
+      <<: *application-environment
+      # El job usa la cuenta root de MongoDB solo para crear el usuario de aplicación.
+      MONGO_USER: ${MONGO_ROOT_USERNAME:?Set MONGO_ROOT_USERNAME in .env}
+      MONGO_PASSWORD: ${MONGO_ROOT_PASSWORD:?Set MONGO_ROOT_PASSWORD in .env}
+      MONGO_AUTH_SOURCE: admin
+      MONGO_APP_USERNAME: ${MONGO_APP_USERNAME:?Set MONGO_APP_USERNAME in .env}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?Set MONGO_APP_PASSWORD in .env}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ""
     restart: "no"
     depends_on:
       db-lb:
@@ -260,6 +285,82 @@ services:
         condition: service_healthy
     networks:
       - database
+
+  worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    image: distributed-three-tier-worker
+    environment:
+      <<: *application-environment
+      OTEL_SERVICE_NAME: store-worker
+      WORKER_FAILURE_RATE: ${WORKER_FAILURE_RATE:-0}
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+    depends_on:
+      catalog-init:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - database
+
+  rabbitmq:
+    image: rabbitmq:4.1.0-management-alpine
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?Set RABBITMQ_USER in .env}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in .env}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    ports:
+      # Consola de administración solo en localhost.
+      - "127.0.0.1:15672:15672"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+    networks:
+      - database
+      - edge
+
+  # Observabilidad local (opcional): docker compose --profile observability up -d
+  # Grafana + Loki + Tempo + Prometheus + OTel Collector en un solo contenedor.
+  otel-lgtm:
+    image: grafana/otel-lgtm:0.8.1
+    profiles: ["observability"]
+    ports:
+      - "127.0.0.1:3000:3000"
+    restart: unless-stopped
+    networks:
+      - edge
+      - application
+      - database
+
+  # Corte gradual Compose → K3s (opcional): docker compose --profile cutover up -d cutover
+  # Pesos en .env: CUTOVER_COMPOSE_WEIGHT / CUTOVER_K3S_WEIGHT y K3S_INGRESS_ADDR.
+  cutover:
+    image: haproxy:3.2-alpine
+    profiles: ["cutover"]
+    environment:
+      CUTOVER_COMPOSE_WEIGHT: ${CUTOVER_COMPOSE_WEIGHT:-90}
+      CUTOVER_K3S_WEIGHT: ${CUTOVER_K3S_WEIGHT:-10}
+      K3S_INGRESS_ADDR: ${K3S_INGRESS_ADDR:-192.168.1.240:80}
+      K3S_INGRESS_HOST: ${K3S_INGRESS_HOST:-store.local}
+    ports:
+      - "8081:80"
+      - "127.0.0.1:8405:8405"
+    volumes:
+      - ./haproxy/cutover.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    restart: unless-stopped
+    depends_on:
+      - presentation-entry
+    networks:
+      - edge
 
   mongodb:
     build: ./mongo
@@ -529,6 +630,7 @@ volumes:
   mongodb-data:
   mongodb2-data:
   mongodb3-data:
+  rabbitmq-data:
 
 networks:
   edge:

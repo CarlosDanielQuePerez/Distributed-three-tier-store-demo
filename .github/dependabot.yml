@@ -1,0 +1,17 @@
+# Fase 7 — cadena de suministro: actualizaciones automáticas de dependencias.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories: ["/", "/application", "/worker"]
+    schedule: { interval: weekly }
+    groups:
+      opentelemetry: { patterns: ["@opentelemetry/*"] }
+  - package-ecosystem: docker
+    directories: ["/application", "/worker", "/web"]
+    schedule: { interval: weekly }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+  - package-ecosystem: terraform
+    directories: ["/infra/terraform/envs/dev", "/infra/terraform/envs/prod"]
+    schedule: { interval: monthly }

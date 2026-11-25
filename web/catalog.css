@@ -66,3 +66,20 @@ pre {
     transform: translateX(-50%);
   }
 }
+
+.pipeline li.trace-id {
+  background: #fdf6e3;
+  border-color: #d8c27a;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+}
+
+#review-form label {
+  display: inline-block;
+  margin: 0.25rem 0.75rem 0.25rem 0;
+}
+
+#review-form input {
+  font: inherit;
+  padding: 0.35rem 0.5rem;
+}

@@ -1,0 +1,25 @@
+# Ajustes del Traefik que trae K3s (HelmChartConfig = valores extra del chart empaquetado).
+# - Logs de acceso en JSON (los recoge el OTel Collector).
+# - Trazas OTLP hacia el agente del nodo para que el Ingress aparezca en Tempo.
+# - Servicio LoadBalancer con IP fija de MetalLB (VIP de la tienda).
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    logs:
+      access:
+        enabled: true
+        format: json
+    tracing:
+      otlp:
+        enabled: true
+        grpc:
+          enabled: true
+          endpoint: otel-agent.observability.svc.cluster.local:4317
+          insecure: true
+    service:
+      annotations:
+        metallb.io/loadBalancerIPs: 192.168.1.240

@@ -1,0 +1,69 @@
+$ kubectl get nodes -o wide
+NAME                STATUS  ROLES                 VERSION       INTERNAL-IP
+k3d-store-agent-0   Ready   <none>                v1.33.5+k3s1  172.20.0.4
+k3d-store-server-0  Ready   control-plane,master  v1.33.5+k3s1  172.20.0.3
+
+$ kubectl -n store get pods -o wide
+NAME                            READY   STATUS      NODE
+store-api-87fdc5569-6ffh5       true    Running     k3d-store-agent-0
+store-api-87fdc5569-zrsb4       true    Running     k3d-store-agent-0
+store-api-87fdc5569-zvhn5       true    Running     k3d-store-server-0
+store-init-ljp5k                false   Succeeded   k3d-store-agent-0
+store-web-86dc7559c8-2p6rr      true    Running     k3d-store-agent-0
+store-web-86dc7559c8-zqb4g      true    Running     k3d-store-agent-0
+store-worker-5db48788db-27ttq   true    Running     k3d-store-server-0
+store-worker-5db48788db-rxrf9   true    Running     k3d-store-agent-0
+
+$ kubectl -n store-data get pods -o wide
+NAME                              READY       STATUS    NODE
+store-mariadb-0                   true,true   Running   k3d-store-server-0
+store-mariadb-1                   true,true   Running   k3d-store-server-0
+store-mariadb-2                   true,true   Running   k3d-store-agent-0
+store-maxscale-0                  true        Running   k3d-store-agent-0
+store-maxscale-1                  true        Running   k3d-store-server-0
+store-mongodb-0                   true,true   Running   k3d-store-agent-0
+store-mongodb-1                   true,true   Running   k3d-store-server-0
+store-mongodb-2                   true,true   Running   k3d-store-agent-0
+store-rabbitmq-server-0           true        Running   k3d-store-server-0
+store-rabbitmq-server-1           true        Running   k3d-store-server-0
+store-rabbitmq-server-2           true        Running   k3d-store-agent-0
+store-redis-0                     true        Running   k3d-store-agent-0
+store-redis-1                     true        Running   k3d-store-server-0
+store-redis-2                     true        Running   k3d-store-agent-0
+store-redis-sentinel-sentinel-0   true        Running   k3d-store-agent-0
+store-redis-sentinel-sentinel-1   true        Running   k3d-store-server-0
+store-redis-sentinel-sentinel-2   true        Running   k3d-store-agent-0
+
+$ curl -H "Host: store.local" http://localhost:8080/api/readyz   (Traefik Ingress)
+{"status":"ok","checks":{"mariadb":"ok","mongodb":"ok","redis":"ok","rabbitmq":"ok"}}
+
+$ GET catálogo (dos veces)
+HTTP/1.1 200 OK
+X-Served-By: store-api-87fdc5569-zvhn5
+X-Trace-Id: 64926c4a86eab870b39a6dee74edd9f4
+HTTP/1.1 200 OK
+X-Served-By: store-api-87fdc5569-zrsb4
+X-Trace-Id: 3808aa8d60967a51aa67bb8a475ead4c
+
+$ POST reseña (Idempotency-Key k3s-evidencia-01) → 202
+{"status":"accepted","idempotencyKey":"k3s-evidencia-01","sku":"ST-003"}  HTTP 202
+$ GET reseñas ST-003
+   K3s - Procesada por el worker en Kubernetes
+   Sam - A comfortable everyday mug.
+
+$ PUT precio con token → catalog.changed
+{"sku":"ST-004","price":6.25,"cacheInvalidation":"queued"}  HTTP 200
+
+$ colas en RabbitMQ (clúster de 3 nodos, colas quorum)
+name	type	messages	consumers
+catalog.invalidate	quorum	0	2
+reviews.retry.30s	quorum	0	0
+catalog.refresh	quorum	0	2
+reviews.retry.5s	quorum	0	0
+reviews.retry.1s	quorum	0	0
+reviews.created	quorum	0	2
+reviews.dlq	quorum	0	0
+
+$ Galera: wsrep_cluster_size
+Variable_name	Value
+wsrep_cluster_size	3

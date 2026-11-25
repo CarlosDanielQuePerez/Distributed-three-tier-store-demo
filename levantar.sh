@@ -10,7 +10,7 @@ fi
 # 2. Crear .env con contraseñas aleatorias (solo si no existe)
 if [ ! -f .env ]; then
   while IFS= read -r line; do
-    if [[ "$line" =~ ^([A-Za-z0-9_]*(PASSWORD|PASS|SECRET)[A-Za-z0-9_]*)= ]]; then
+    if [[ "$line" =~ ^([A-Za-z0-9_]*(PASSWORD|PASS|SECRET|TOKEN)[A-Za-z0-9_]*)= ]]; then
       echo "${BASH_REMATCH[1]}=$(openssl rand -hex 12)"
     else
       echo "$line"
@@ -18,7 +18,21 @@ if [ ! -f .env ]; then
   done < .env.example > .env
   echo ".env creado"
 else
-  echo ".env ya existía, no se toca"
+  # .env existente: agrega las variables nuevas de .env.example que falten
+  # (p. ej. RabbitMQ y el usuario de aplicación de MongoDB) sin tocar las demás.
+  added=0
+  while IFS= read -r line; do
+    [[ "$line" =~ ^([A-Za-z0-9_]+)= ]] || continue
+    key="${BASH_REMATCH[1]}"
+    grep -q "^${key}=" .env && continue
+    if [[ "$key" =~ (PASSWORD|PASS|SECRET|TOKEN) ]]; then
+      echo "${key}=$(openssl rand -hex 12)" >> .env
+    else
+      echo "$line" >> .env
+    fi
+    added=$((added+1))
+  done < .env.example
+  echo ".env ya existía; se agregaron $added variable(s) nuevas"
 fi
 
 # 3. Levantar todo (la primera vez tarda varios minutos)

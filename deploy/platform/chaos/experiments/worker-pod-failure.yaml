@@ -1,0 +1,11 @@
+# Deja los workers sin servicio 60 s: la cola crece y luego se drena (consumer lag).
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata: { name: worker-pod-failure, namespace: chaos-mesh }
+spec:
+  action: pod-failure
+  mode: all
+  duration: 60s
+  selector:
+    namespaces: [store]
+    labelSelectors: { app.kubernetes.io/name: store-worker }

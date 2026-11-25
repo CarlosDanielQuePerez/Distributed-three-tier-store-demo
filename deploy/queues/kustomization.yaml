@@ -1,0 +1,8 @@
+# Fase 3: RabbitMQ (3 réplicas, colas quorum, volúmenes persistentes).
+# La topología (exchanges, colas, DLQ) está en messaging/topology.json y la declaran
+# la API y el worker al conectarse.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: store-data
+resources:
+  - rabbitmq.yaml

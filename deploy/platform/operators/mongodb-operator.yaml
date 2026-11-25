@@ -1,0 +1,33 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: mongodb-community-operator
+  namespace: flux-system
+spec:
+  interval: 30m
+  releaseName: mongodb-community-operator
+  targetNamespace: mongodb-operator
+  storageNamespace: mongodb-operator
+  install:
+    createNamespace: true
+    crds: CreateReplace
+    remediation: { retries: 3 }
+  upgrade:
+    crds: CreateReplace
+    remediation: { retries: 3, remediateLastFailure: true }
+  chart:
+    spec:
+      chart: community-operator
+      version: "0.13.0"
+      sourceRef: { kind: HelmRepository, name: mongodb, namespace: flux-system }
+  values:
+    community-operator-crds: { enabled: true }
+    operator:
+      # El replica set vive en store-data (otro namespace): hay que vigilar todos.
+      watchNamespace: "*"
+      resources:
+        requests: { cpu: 100m, memory: 128Mi }
+        limits: { cpu: 500m, memory: 512Mi }
+    database:
+      name: mongodb-database
+      namespace: store-data

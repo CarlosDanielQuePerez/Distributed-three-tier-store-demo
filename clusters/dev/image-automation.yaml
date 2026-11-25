@@ -1,0 +1,56 @@
+# Fase 5, "image automation": Flux detecta nuevas imágenes main-<run>-<sha> en GHCR y
+# hace commit en deploy/overlays/dev con la etiqueta nueva (marcadores $imagepolicy).
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata: { name: store-api, namespace: flux-system }
+spec: { image: ghcr.io/carlosdanielqueperez/store-api, interval: 5m }
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata: { name: store-web, namespace: flux-system }
+spec: { image: ghcr.io/carlosdanielqueperez/store-web, interval: 5m }
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata: { name: store-worker, namespace: flux-system }
+spec: { image: ghcr.io/carlosdanielqueperez/store-worker, interval: 5m }
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata: { name: store-api-dev, namespace: flux-system }
+spec:
+  imageRepositoryRef: { name: store-api }
+  filterTags: { pattern: '^main-(?P<run>[0-9]+)-[a-f0-9]{7}$', extract: '$run' }
+  policy: { numerical: { order: asc } }
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata: { name: store-web-dev, namespace: flux-system }
+spec:
+  imageRepositoryRef: { name: store-web }
+  filterTags: { pattern: '^main-(?P<run>[0-9]+)-[a-f0-9]{7}$', extract: '$run' }
+  policy: { numerical: { order: asc } }
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata: { name: store-worker-dev, namespace: flux-system }
+spec:
+  imageRepositoryRef: { name: store-worker }
+  filterTags: { pattern: '^main-(?P<run>[0-9]+)-[a-f0-9]{7}$', extract: '$run' }
+  policy: { numerical: { order: asc } }
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageUpdateAutomation
+metadata: { name: store-dev, namespace: flux-system }
+spec:
+  interval: 5m
+  sourceRef: { kind: GitRepository, name: flux-system }
+  git:
+    checkout: { ref: { branch: main } }
+    commit:
+      author: { name: fluxcdbot, email: fluxcdbot@users.noreply.github.com }
+      messageTemplate: "chore(dev): actualizar imágenes [skip ci]"
+    push: { branch: main }
+  update:
+    path: ./deploy/overlays/dev
+    strategy: Setters

@@ -1,0 +1,11 @@
+# LITE=1: sin Kyverno instalado no se pueden aplicar ClusterPolicies.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../config
+patches:
+  - patch: |
+      $patch: delete
+      apiVersion: kyverno.io/v1
+      kind: ClusterPolicy
+      metadata: { name: store-workload-hygiene }

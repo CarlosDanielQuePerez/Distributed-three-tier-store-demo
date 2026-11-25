@@ -1,0 +1,20 @@
+Docker Compose — 2026-11-24T15:18:41-05:00  n=20000 c=50
+GET /api/products/cheapest             completadas=20000   fallidas=0     no2xx=0      rps=917.36    p50=48ms p95=110ms p99=165ms max=306ms
+POST reseñas (cola)                    completadas=5000    fallidas=0     no2xx=0      rps=321.01    p50=141ms p95=271ms p99=349ms max=539ms
+
+$ rabbitmqctl list_queues (después de la carga)
+name	messages
+reviews.retry.1s	0
+reviews.retry.30s	0
+reviews.dlq	0
+reviews.created	0
+reviews.retry.5s	0
+
+$ MongoDB: reseñas guardadas por el worker (reviewer=loadtest)
+5000
+
+Referencia anterior (pruebas/despues/resumen.txt, Compose con galera1 caído):
+Complete requests:      20148
+Failed requests:        20
+Non-2xx responses:      20
+Requests per second:    498.91 [#/sec] (mean)

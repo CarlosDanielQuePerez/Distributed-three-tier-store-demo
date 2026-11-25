@@ -1,0 +1,73 @@
+# Fase 4 — Terraform: plan comentado en el PR y apply solo desde main con aprobación
+# manual (environment "production" con revisores obligatorios).
+# Corre en un runner self-hosted dentro de la LAN porque los nodos K3s son
+# computadoras del equipo (no son accesibles desde los runners de GitHub).
+name: terraform
+
+on:
+  pull_request:
+    paths: ["infra/terraform/**"]
+  push:
+    branches: [main]
+    paths: ["infra/terraform/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    if: github.event_name == 'pull_request'
+    runs-on: [self-hosted, lan]
+    permissions:
+      contents: read
+      pull-requests: write
+    strategy:
+      matrix:
+        env: [dev, prod]
+    defaults:
+      run:
+        working-directory: infra/terraform/envs/${{ matrix.env }}
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.TF_STATE_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STATE_SECRET_KEY }}
+      GITHUB_TOKEN: ${{ secrets.TF_GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.4
+      - run: printf '%s' "${{ secrets.TF_BACKEND_HCL }}" > backend.hcl && printf '%s' "${{ secrets[format('TF_VARS_{0}', matrix.env)] }}" > terraform.tfvars
+      - run: terraform init -input=false -backend-config=backend.hcl
+      - id: plan
+        run: terraform plan -input=false -no-color -lock-timeout=5m -out=tfplan | tee plan.txt
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('infra/terraform/envs/${{ matrix.env }}/plan.txt', 'utf8');
+            const body = `### terraform plan — \`${{ matrix.env }}\`\n<details><summary>Ver plan</summary>\n\n\`\`\`\n${plan.slice(-60000)}\n\`\`\`\n</details>`;
+            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });
+
+  apply:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, lan]
+    environment: production # requiere aprobación manual configurada en GitHub
+    strategy:
+      max-parallel: 1
+      matrix:
+        env: [dev, prod]
+    defaults:
+      run:
+        working-directory: infra/terraform/envs/${{ matrix.env }}
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.TF_STATE_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STATE_SECRET_KEY }}
+      GITHUB_TOKEN: ${{ secrets.TF_GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.4
+      - run: printf '%s' "${{ secrets.TF_BACKEND_HCL }}" > backend.hcl && printf '%s' "${{ secrets[format('TF_VARS_{0}', matrix.env)] }}" > terraform.tfvars
+      - run: terraform init -input=false -backend-config=backend.hcl
+      - run: terraform apply -input=false -auto-approve -lock-timeout=5m

@@ -1,0 +1,12 @@
+# Agentes de Wazuh (DaemonSet, uno por nodo). El manager/indexer/dashboard se instalan
+# con bootstrap.sh desde el repositorio oficial wazuh-kubernetes (requiere generar
+# certificados que no deben versionarse).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: wazuh
+resources:
+  - agent-daemonset.yaml
+configMapGenerator:
+  - name: wazuh-agent-conf
+    files:
+      - ossec.conf

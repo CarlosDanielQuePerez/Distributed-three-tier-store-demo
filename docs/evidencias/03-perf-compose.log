@@ -1,0 +1,3 @@
+Docker Compose — 2026-11-24T15:18:41-05:00  n=20000 c=50
+GET /api/products/cheapest             completadas=20000   fallidas=0     no2xx=0      rps=917.36    p50=48ms p95=110ms p99=165ms max=306ms
+POST reseñas (cola)                    completadas=5000    fallidas=0     no2xx=0      rps=321.01    p50=141ms p95=271ms p99=349ms max=539ms

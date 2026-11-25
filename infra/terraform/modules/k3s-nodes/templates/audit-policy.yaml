@@ -1,0 +1,23 @@
+# Política de auditoría de Kubernetes: metadatos de todo, cuerpo de las peticiones que
+# modifican RBAC/Secrets/workloads, sin ruido de lecturas de salud.
+apiVersion: audit.k8s.io/v1
+kind: Policy
+omitStages: ["RequestReceived"]
+rules:
+  - level: None
+    nonResourceURLs: ["/healthz*", "/livez*", "/readyz*", "/metrics", "/version"]
+  - level: None
+    users: ["system:kube-proxy"]
+    verbs: ["watch"]
+  - level: Metadata
+    resources:
+      - group: ""
+        resources: ["secrets", "configmaps"]
+  - level: RequestResponse
+    verbs: ["create", "update", "patch", "delete"]
+    resources:
+      - group: "rbac.authorization.k8s.io"
+      - group: "apps"
+      - group: ""
+        resources: ["pods", "pods/exec", "serviceaccounts", "namespaces"]
+  - level: Metadata

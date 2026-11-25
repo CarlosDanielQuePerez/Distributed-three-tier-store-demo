@@ -1,0 +1,10 @@
+# Copiar a terraform.tfvars (no se versiona) y poner la IP de la LAN de cada computadora.
+# Equipo de 2 computadoras: 1 server (plano de control + etcd) + 1 agent.
+# Con 3 o más computadoras: número impar de "server" (3, 5) para HA del plano de control.
+nodes = [
+  { name = "k3s-node1", address = "192.168.1.101", ssh_user = "ubuntu", role = "server" }, # computadora 1
+  { name = "k3s-node2", address = "192.168.1.102", ssh_user = "ubuntu", role = "agent" },  # computadora 2
+]
+ssh_private_key_path = "~/.ssh/id_ed25519"
+lan_cidr             = "192.168.1.0/24"
+metallb_range        = "192.168.1.246-192.168.1.250"

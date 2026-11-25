@@ -1,0 +1,57 @@
++ ab -n 5000 -c 50 -p /tmp/review.json -T application/json http://store-web.store.svc.cluster.local/api/products/ST-001/reviews
+This is ApacheBench, Version 2.3 <$Revision: 1913912 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking store-web.store.svc.cluster.local (be patient)
+Completed 500 requests
+Completed 1000 requests
+Completed 1500 requests
+Completed 2000 requests
+Completed 2500 requests
+Completed 3000 requests
+Completed 3500 requests
+Completed 4000 requests
+Completed 4500 requests
+Completed 5000 requests
+Finished 5000 requests
+
+
+Server Software:        nginx
+Server Hostname:        store-web.store.svc.cluster.local
+Server Port:            80
+
+Document Path:          /api/products/ST-001/reviews
+Document Length:        Variable
+
+Concurrency Level:      50
+Time taken for tests:   20.669 seconds
+Complete requests:      5000
+Failed requests:        0
+Total transferred:      1730000 bytes
+Total body sent:        1270000
+HTML transferred:       460000 bytes
+Requests per second:    241.91 [#/sec] (mean)
+Time per request:       206.689 [ms] (mean)
+Time per request:       4.134 [ms] (mean, across all concurrent requests)
+Transfer rate:          81.74 [Kbytes/sec] received
+                        60.00 kb/s sent
+                        141.74 kb/s total
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    2   2.8      1      29
+Processing:    40  202 153.7    163    1661
+Waiting:       40  201 153.6    162    1660
+Total:         40  204 154.3    165    1676
+
+Percentage of the requests served within a certain time (ms)
+  50%    165
+  66%    201
+  75%    231
+  80%    252
+  90%    342
+  95%    485
+  98%    636
+  99%    830
+ 100%   1676 (longest request)

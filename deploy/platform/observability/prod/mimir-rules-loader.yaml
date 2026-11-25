@@ -1,0 +1,36 @@
+# Sube las reglas (SLOs, colas, Galera) al ruler de Mimir y la configuración de
+# Alertmanager (con el webhook de Slack del Secret alertmanager-slack, opcional).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mimir-rules-loader
+  annotations:
+    kustomize.toolkit.fluxcd.io/force: enabled
+spec:
+  backoffLimit: 30
+  template:
+    spec:
+      restartPolicy: OnFailure
+      securityContext: { runAsNonRoot: true, runAsUser: 10001, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: mimirtool
+          image: grafana/mimirtool:2.15.0
+          env:
+            - name: SLACK_WEBHOOK_URL
+              valueFrom: { secretKeyRef: { name: alertmanager-slack, key: url, optional: true } }
+          command: ["/bin/sh", "-c"]
+          args:
+            - >-
+              set -e; addr=http://mimir-gateway.observability.svc.cluster.local;
+              mimirtool rules sync --address "$addr" --id anonymous /rules/rules.yaml;
+              sed "s|SLACK_WEBHOOK_URL|${SLACK_WEBHOOK_URL:-https://hooks.slack.com/services/REPLACE/ME}|" /rules/alertmanager.yaml > /tmp/am.yaml;
+              mimirtool alertmanager load --address "$addr" --id anonymous /tmp/am.yaml; echo loaded
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+          volumeMounts:
+            - { name: rules, mountPath: /rules }
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: rules
+          configMap: { name: mimir-rules }
+        - name: tmp
+          emptyDir: {}

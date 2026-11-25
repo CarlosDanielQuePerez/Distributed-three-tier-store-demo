@@ -1,0 +1,28 @@
+# CIS Kubernetes Benchmark para K3s. Ejecutar a mano en cada nodo servidor:
+#   kubectl apply -f deploy/platform/security/kube-bench-job.yaml
+#   kubectl -n kube-system logs job/kube-bench > pruebas/plataforma/kube-bench.txt
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kube-bench
+  namespace: kube-system
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      hostPID: true
+      restartPolicy: Never
+      containers:
+        - name: kube-bench
+          image: aquasec/kube-bench:v0.10.4
+          command: ["kube-bench", "run", "--benchmark", "k3s-cis-1.8"]
+          volumeMounts:
+            - { name: var-lib-rancher, mountPath: /var/lib/rancher, readOnly: true }
+            - { name: etc-rancher, mountPath: /etc/rancher, readOnly: true }
+            - { name: etc-systemd, mountPath: /etc/systemd, readOnly: true }
+            - { name: lib-systemd, mountPath: /lib/systemd, readOnly: true }
+      volumes:
+        - { name: var-lib-rancher, hostPath: { path: /var/lib/rancher } }
+        - { name: etc-rancher, hostPath: { path: /etc/rancher } }
+        - { name: etc-systemd, hostPath: { path: /etc/systemd } }
+        - { name: lib-systemd, hostPath: { path: /lib/systemd } }

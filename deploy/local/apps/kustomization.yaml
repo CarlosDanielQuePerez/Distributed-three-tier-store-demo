@@ -1,0 +1,39 @@
+# Aplicación para el clúster k3d de UNA sola computadora (scripts/local-cluster.sh up).
+# Mismo overlay dev con imágenes :local y réplicas reducidas: con 3 réplicas y HPA hasta
+# 9 pods en ~6 GB de RAM, el arranque saturaba la CPU y los HPA escalaban sin control.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../overlays/dev
+images:
+  - { name: ghcr.io/carlosdanielqueperez/store-api, newTag: local }
+  - { name: ghcr.io/carlosdanielqueperez/store-web, newTag: local }
+  - { name: ghcr.io/carlosdanielqueperez/store-worker, newTag: local }
+replicas:
+  - { name: store-api, count: 2 }
+  - { name: store-web, count: 2 }
+  - { name: store-worker, count: 1 }
+patches:
+  - target: { kind: ConfigMap, name: store-config }
+    patch: |
+      - op: replace
+        path: /data/GRAFANA_URL
+        value: http://grafana.store.local:8080
+  - target: { kind: HorizontalPodAutoscaler, name: store-api }
+    patch: |
+      - { op: replace, path: /spec/minReplicas, value: 2 }
+      - { op: replace, path: /spec/maxReplicas, value: 3 }
+  - target: { kind: HorizontalPodAutoscaler, name: store-web }
+    patch: |
+      - { op: replace, path: /spec/minReplicas, value: 2 }
+      - { op: replace, path: /spec/maxReplicas, value: 2 }
+  - target: { kind: HorizontalPodAutoscaler, name: store-worker }
+    patch: |
+      - { op: replace, path: /spec/minReplicas, value: 1 }
+      - { op: replace, path: /spec/maxReplicas, value: 2 }
+  - target: { kind: PodDisruptionBudget, name: store-api }
+    patch: |
+      - { op: replace, path: /spec/minAvailable, value: 1 }
+  - target: { kind: PodDisruptionBudget, name: store-web }
+    patch: |
+      - { op: replace, path: /spec/minAvailable, value: 1 }

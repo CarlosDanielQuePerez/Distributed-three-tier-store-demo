@@ -1,0 +1,66 @@
+# MongoDB replica set de 3 miembros (MongoDB Community Operator).
+# El usuario de aplicación tiene readWrite solo en store_reviews (ToDo 6). La API y el
+# worker usan su contraseña desde store-app-secrets (MONGO_PASSWORD).
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: store-mongodb
+spec:
+  members: 3
+  type: ReplicaSet
+  version: "7.0.14"
+  security:
+    authentication:
+      modes: ["SCRAM"]
+  users:
+    - name: store-admin
+      db: admin
+      passwordSecretRef: { name: mongodb-users, key: admin-password }
+      roles:
+        - { name: clusterAdmin, db: admin }
+        - { name: userAdminAnyDatabase, db: admin }
+        - { name: readWriteAnyDatabase, db: admin }
+        - { name: backup, db: admin }
+        - { name: restore, db: admin }
+      scramCredentialsSecretName: store-admin-scram
+    - name: store-reviews-app
+      db: store_reviews
+      passwordSecretRef: { name: mongodb-users, key: app-password }
+      roles:
+        - { name: readWrite, db: store_reviews }
+      scramCredentialsSecretName: store-reviews-app-scram
+      # La cadena de conexión queda en este namespace (store-data). No se publica en "store":
+      # un ownerReference entre namespaces hace que Kubernetes borre ese Secret en bucle.
+      connectionStringSecretName: store-mongodb-app
+  additionalMongodConfig:
+    storage.wiredTiger.engineConfig.cacheSizeGB: 0.25
+  statefulSet:
+    spec:
+      template:
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  podAffinityTerm:
+                    topologyKey: kubernetes.io/hostname
+                    labelSelector:
+                      matchLabels: { app: store-mongodb-svc }
+          containers:
+            - name: mongod
+              resources:
+                requests: { cpu: 100m, memory: 256Mi }
+                limits: { memory: 768Mi }
+            - name: mongodb-agent
+              resources:
+                requests: { cpu: 50m, memory: 64Mi }
+                limits: { memory: 256Mi }
+      volumeClaimTemplates:
+        - metadata: { name: data-volume }
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources: { requests: { storage: 2Gi } }
+        - metadata: { name: logs-volume }
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources: { requests: { storage: 512Mi } }

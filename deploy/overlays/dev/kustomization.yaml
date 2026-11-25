@@ -1,0 +1,25 @@
+# Entorno dev: sigue a la rama main. Flux Image Automation actualiza las etiquetas de
+# abajo (marcadores $imagepolicy) cada vez que release.yml publica una imagen nueva.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+images:
+  - name: store-api
+    newName: ghcr.io/carlosdanielqueperez/store-api
+    newTag: dev # {"$imagepolicy": "flux-system:store-api-dev:tag"}
+  - name: store-web
+    newName: ghcr.io/carlosdanielqueperez/store-web
+    newTag: dev # {"$imagepolicy": "flux-system:store-web-dev:tag"}
+  - name: store-worker
+    newName: ghcr.io/carlosdanielqueperez/store-worker
+    newTag: dev # {"$imagepolicy": "flux-system:store-worker-dev:tag"}
+patches:
+  - target: { kind: ConfigMap, name: store-config }
+    patch: |
+      - op: replace
+        path: /data/DEPLOYMENT_ENVIRONMENT
+        value: dev
+      - op: replace
+        path: /data/GRAFANA_URL
+        value: http://grafana.store.local

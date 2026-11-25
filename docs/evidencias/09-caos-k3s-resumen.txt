@@ -1,0 +1,10 @@
+Carga continua: ab -t 90 -c 20 contra /api/products/cheapest; experimento aplicado a los 20 s
+
+api-network-delay                      completadas=17793   fallidas=0     no2xx=0      rps=197.59    p50=35ms p95=305ms p99=830ms max=6044ms
+api-pod-kill                           completadas=58861   fallidas=0     no2xx=0      rps=653.99    p50=17ms p95=72ms p99=225ms max=4372ms
+galera-pod-kill                        completadas=27741   fallidas=0     no2xx=0      rps=305.50    p50=28ms p95=140ms p99=815ms max=27741ms
+mongodb-primary-kill                   completadas=64968   fallidas=0     no2xx=0      rps=721.87    p50=15ms p95=62ms p99=158ms max=5855ms
+rabbitmq-pod-kill                      completadas=43525   fallidas=0     no2xx=0      rps=481.90    p50=18ms p95=86ms p99=283ms max=7877ms
+redis-master-kill                      completadas=34350   fallidas=0     no2xx=0      rps=381.65    p50=21ms p95=96ms p99=455ms max=9212ms
+web-pod-kill                           completadas=38860   fallidas=0     no2xx=0      rps=429.86    p50=20ms p95=80ms p99=283ms max=10543ms
+worker-pod-failure                     completadas=40910   fallidas=0     no2xx=0      rps=454.55    p50=20ms p95=84ms p99=332ms max=8342ms
